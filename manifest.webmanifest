@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "Ascend — 30-Day Productivity",
+  "short_name": "Ascend",
+  "description": "Build a 30-day work streak, grow a flower, and track daily progress.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f6f1",
+  "theme_color": "#51a94e",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

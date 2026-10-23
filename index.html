@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#51a94e">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>ASCEND</title>
+<script>
+try {
+  const saved = JSON.parse(localStorage.getItem('field_appearance') || 'null');
+  const mode = saved && saved.mode ? saved.mode : localStorage.getItem('field_theme');
+  if (mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+} catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f1; --text:#25241f; --accent:#51a94e;
+  --surface:#f1f0e9; --surface2:#eae9e1;
+  --muted:#858378; --line:#e3e0d5;
+  --l0:#ecebe3; --l1:#cde7bc; --l2:#a6d68c; --l3:#6cbd53; --l4:#279a63;
+  --danger:#c0685f; --onAccent:#06150f; --shadow:rgba(34,30,20,.18);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#171816; --text:#efeee8; --accent:#83c878;
+  --surface:#20221f; --surface2:#292b27;
+  --muted:#a2a398; --line:#3b3d37;
+  --l0:#2b2d29; --l1:#304d35; --l2:#3b7044; --l3:#559a5c; --l4:#7bc879;
+  --danger:#e18479; --onAccent:#102014; --shadow:rgba(0,0,0,.42);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+body{padding:32px 20px 64px;max-width:920px;margin:0 auto;}
+.topHeader{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;}
+h1{font-weight:700;font-size:1.45rem;margin:0;letter-spacing:.08em;}
+.themeToggle{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--muted);font:500 .74rem 'Space Grotesk',sans-serif;cursor:pointer;}
+.themeToggle:hover{color:var(--text);border-color:var(--muted);}
+.themeToggle:focus-visible,.modeChoice:focus-visible,.accentMenuButton:focus-visible{outline:2px solid var(--l3);outline-offset:2px;}
+.appearancePanel{position:relative;width:100%;margin:10px 0 0;padding:18px;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--text);}
+.appearancePanel[hidden]{display:none;}
+.appearancePanelHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;font-size:1.1rem;font-weight:600;}
+.appearanceReset{padding:5px 2px;border:0;background:none;color:var(--muted);font:500 .74rem 'Space Grotesk',sans-serif;cursor:pointer;}
+.appearanceReset:hover{color:var(--text);}
+.appearanceSectionTitle{margin:0 0 8px;color:var(--muted);font-size:.75rem;font-weight:500;}
+.appearanceGroup{overflow:visible;background:var(--surface);border:1px solid var(--line);border-radius:10px;}
+.appearanceRow{position:relative;display:flex;min-height:48px;align-items:center;justify-content:space-between;gap:16px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:.78rem;}
+.appearanceRow:last-child{border-bottom:0;}
+.appearanceRowLabel{flex:1;min-width:90px;}
+.modeChoices{display:flex;align-items:center;gap:8px;}
+.modeChoice{display:flex;min-width:65px;flex-direction:column;align-items:center;gap:4px;padding:4px 5px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);font:500 .63rem 'Space Grotesk',sans-serif;cursor:pointer;}
+.modeChoice[aria-pressed=true]{border-color:var(--accent);background:var(--surface2);color:var(--text);}
+.modePreview{position:relative;display:block;width:40px;height:23px;overflow:hidden;border:1px solid var(--line);border-radius:5px;background:#f4f4f2;}
+.modePreview::before,.modePreview::after{position:absolute;top:5px;left:5px;height:2px;border-radius:2px;background:#8c8c88;content:"";}
+.modePreview::before{width:17px;}.modePreview::after{top:11px;width:25px;}
+.modePreview.dark{background:#242424;border-color:#4a4a4a;}
+.modePreview.dark::before,.modePreview.dark::after{background:#b7b7b7;}
+.modePreview.system{background:linear-gradient(90deg,#f4f4f2 0 50%,#242424 50%);}
+.modePreview.system::before{background:linear-gradient(90deg,#777 0 50%,#bbb 50%);}
+.modePreview.system::after{background:linear-gradient(90deg,#999 0 50%,#888 50%);}
+.appearanceControls{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+.accentMenuWrap{position:relative;}
+.accentMenuButton{display:inline-flex;min-width:118px;align-items:center;gap:8px;padding:6px 9px;border:1px solid var(--line);border-radius:18px;background:var(--surface2);color:var(--text);font:500 .72rem 'Space Grotesk',sans-serif;cursor:pointer;}
+.accentMenuButton:hover{border-color:var(--muted);}
+.accentMenuDot{width:13px;height:13px;flex:none;border:1px solid color-mix(in srgb,var(--text) 16%,transparent);border-radius:50%;background:var(--swatch);}
+.accentChevron{margin-left:auto;color:var(--muted);font-size:.65rem;}
+.accentMenu{position:absolute;top:auto;bottom:calc(100% + 6px);right:0;z-index:8;width:184px;padding:5px;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px var(--shadow);}
+.accentMenu[hidden]{display:none;}
+.appearanceFooter{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);}
+.appearanceFooterActions{display:flex;justify-content:flex-end;}
+.accentMenuOption{display:flex;width:100%;align-items:center;gap:9px;padding:7px 8px;border:0;border-radius:6px;background:transparent;color:var(--text);font:400 .72rem 'Space Grotesk',sans-serif;text-align:left;cursor:pointer;}
+.accentMenuOption:hover,.accentMenuOption[aria-selected=true]{background:var(--surface2);}
+.accentMenuOption .accentMenuDot{width:12px;height:12px;}
+.accentCheck{margin-left:auto;color:var(--text);visibility:hidden;}
+.accentMenuOption[aria-selected=true] .accentCheck{visibility:visible;}
+.colorControl{position:relative;display:flex;align-items:center;gap:6px;padding:3px 9px 3px 5px;border:1px solid var(--line);border-radius:18px;background:var(--surface2);}
+.colorControl[hidden]{display:none;}
+.colorPickerButton{display:grid;width:20px;height:20px;flex:none;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;}
+.colorPickerSwatch{display:block;width:14px;height:14px;border:1px solid color-mix(in srgb,var(--text) 18%,transparent);border-radius:50%;background:var(--pickerColor,#51a94e);}
+.colorHex{width:72px;padding:3px 0;border:0;border-radius:0;background:transparent;color:var(--text);font:500 .68rem 'JetBrains Mono',monospace;text-align:left;}
+.colorHex:focus{outline:0!important;border-color:transparent!important;}
+.colorHex[aria-invalid=true]{color:var(--danger);}
+.colorPickerPopup{position:absolute;top:auto;bottom:calc(100% + 8px);right:0;z-index:20;width:min(256px,calc(100vw - 48px));padding:9px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 9px 26px var(--shadow);}
+.colorPickerPopup[hidden]{display:none;}
+.colorSvPicker{position:relative;height:150px;overflow:hidden;border:1px solid color-mix(in srgb,var(--text) 12%,transparent);border-radius:6px;background:hsl(var(--picker-hue,120) 100% 50%);cursor:crosshair;touch-action:none;}
+.colorSvPicker::before,.colorSvPicker::after{position:absolute;inset:0;pointer-events:none;content:"";}
+.colorSvPicker::before{background:linear-gradient(to right,#fff,transparent);}
+.colorSvPicker::after{background:linear-gradient(to top,#000,transparent);}
+.colorPickerMarker{position:absolute;z-index:1;left:50%;top:50%;width:14px;height:14px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.55);transform:translate(-50%,-50%);pointer-events:none;}
+.colorHue{display:block;width:100%;height:14px;margin:9px 0 1px;padding:0;appearance:none;border:0;border-radius:8px;background:linear-gradient(90deg,#f00 0%,#ff0 16.67%,#0f0 33.33%,#0ff 50%,#00f 66.67%,#f0f 83.33%,#f00 100%);cursor:pointer;}
+.colorHue::-webkit-slider-thumb{width:16px;height:16px;appearance:none;border:2px solid #fff;border-radius:50%;background:var(--accent);box-shadow:0 0 0 1px rgba(0,0,0,.35);}
+.colorHue::-moz-range-thumb{width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:var(--accent);box-shadow:0 0 0 1px rgba(0,0,0,.35);}
+@media(max-width:640px){.appearancePanel{padding:14px;}.appearanceRow{gap:8px;padding:9px 10px;}.appearanceRowLabel{min-width:74px;}.appearanceFields{grid-template-columns:1fr;}.modeChoices{gap:3px;}.modeChoice{min-width:53px;}.colorHex{width:78px;}}
+input:focus,select:focus,textarea:focus{outline:1px solid var(--l4);border-color:var(--l4)!important;}
+
+.hero{padding:2px 0 22px;margin-bottom:4px;border-bottom:1px solid var(--line);cursor:pointer;}
+.heroLabel{font-size:.78rem;color:var(--muted);margin-bottom:4px;}
+#heroPct{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:2.4rem;font-weight:600;
+  color:var(--text);line-height:1;display:inline-block;}
+@keyframes heroPop{0%{transform:scale(1);}50%{transform:scale(1.15);}100%{transform:scale(1);}}
+.pop{animation:heroPop .4s ease;}
+@keyframes cellIn{from{opacity:0;transform:scale(.3);}to{opacity:1;transform:scale(1);}}
+#heroFrac{font-size:.78rem;color:var(--muted);margin-top:6px;}
+.heroBar{height:4px;background:var(--line);border-radius:2px;margin-top:12px;overflow:hidden;}
+.heroBarFill{height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .2s ease;}
+.weekStrip{display:flex;gap:5px;margin:16px 0 4px;}
+.weekStrip .cell{width:14px;height:14px;cursor:default;}
+
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:22px 0 20px;flex-wrap:wrap;}
+.toggle{display:flex;background:var(--surface);border:1px solid var(--line);
+  border-radius:7px;overflow:hidden;}
+.heatmapViewToggle{width:max-content;max-width:100%;margin-bottom:12px;}
+.toggle button{background:none;border:0;color:var(--muted);padding:7px 15px;
+  font-size:.82rem;cursor:pointer;transition:color .15s;}
+.toggle button.active{background:var(--surface2);color:var(--text);}
+.streak{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));flex:1 1 390px;gap:6px;margin-left:auto;font-family:'Space Grotesk',sans-serif;}
+.streakItem{display:flex;min-width:0;flex-direction:column;justify-content:center;gap:3px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);}
+.streakLabel{color:var(--muted);font-size:.59rem;line-height:1.2;}
+.streakValue{color:var(--text);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.78rem;line-height:1.2;white-space:nowrap;}
+.streakHint{grid-column:1/-1;margin:0;color:var(--muted);font-size:.72rem;line-height:1.4;}
+.streak b{font-weight:600;}
+.plantWrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,310px);align-items:stretch;gap:16px;margin:0 0 22px;}
+.plantIntro{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(166px,220px) minmax(0,1fr);align-items:center;gap:16px;min-height:210px;overflow:hidden;padding:12px 18px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(120deg,color-mix(in srgb,var(--surface) 94%,var(--accent) 6%),var(--surface));}
+.plantArt{width:100%;max-width:220px;aspect-ratio:6/5;justify-self:center;}
+#plantSvg{display:block;width:100%;height:100%;overflow:visible;transform-origin:120px 164px;animation:plantSway 7.8s ease-in-out infinite;}
+@keyframes plantSway{0%,100%{transform:rotate(-.7deg) translateY(0);}50%{transform:rotate(.7deg) translateY(-2px);}}
+.plantCopy{position:relative;z-index:1;min-width:0;}
+.plantEyebrow{margin:0 0 8px;color:var(--accent);font-size:.61rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;}
+.plantTitle{margin:0;color:var(--text);font-size:1.18rem;font-weight:700;line-height:1.12;}
+.plantCaption{min-height:1.2em;margin:7px 0 15px;color:var(--muted);font-size:.75rem;line-height:1.4;}
+.plantProgressLabels{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;color:var(--muted);font-size:.64rem;}
+.plantProgressLabels strong{color:var(--text);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.62rem;font-weight:600;white-space:nowrap;}
+.plantProgressTrack{height:5px;overflow:hidden;border-radius:5px;background:var(--line);}
+.plantProgressTrack span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--l3),var(--accent));transition:width .6s cubic-bezier(.2,.7,.2,1);}
+.pomoCard{width:100%;align-self:stretch;justify-self:stretch;display:flex;flex-direction:column;justify-content:center;margin:0;padding:14px 15px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);}
+.pomoHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
+.pomoTitle{font-size:.68rem;font-weight:500;color:var(--muted);}
+.pomoToday{color:var(--muted);font-size:.64rem;}
+.pomoToday strong{color:var(--text);font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:600;}
+#pomoFocusReset{margin-left:3px;padding:0 2px;border:0;background:none;color:var(--muted);font-size:.72rem;cursor:pointer;}
+#pomoFocusReset:hover{color:var(--text);}
+.pomoModes{display:flex;align-items:center;gap:7px;}
+.pomoModeChoice{padding:2px 1px;border:0;background:none;color:var(--muted);font:inherit;font-size:.66rem;cursor:pointer;}
+.pomoModeChoice b{margin-left:3px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.65rem;font-weight:500;}
+.pomoModeChoice.active{color:var(--text);font-weight:600;}
+.pomoRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:3px;}
+.pomoClock{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:1.35rem;font-weight:600;letter-spacing:-.04em;line-height:1.2;}
+.pomoButtons{display:flex;align-items:center;gap:6px;}
+#pomoToggle{min-width:76px;background:transparent;color:var(--text);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:6px;padding:6px 9px;font-weight:500;font-size:.66rem;cursor:pointer;}
+#pomoToggle:hover{background:color-mix(in srgb,var(--accent) 10%,var(--surface2));}
+#pomoReset{background:none;border:0;color:var(--muted);padding:5px 1px;font-size:.65rem;cursor:pointer;}
+#pomoReset:hover{color:var(--text);}
+.pomoTrack{height:2px;margin-top:6px;overflow:hidden;border-radius:2px;background:var(--line);}
+.pomoTrack span{display:block;width:0;height:100%;border-radius:inherit;background:var(--accent);transition:width .3s linear;}
+.pomoSettings{margin-top:6px;}
+.pomoSettings summary{color:var(--muted);font-size:.64rem;font-weight:400;}
+.pomoFields{display:flex;gap:12px;margin-top:8px;}
+.pomoFields label{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:.68rem;}
+.pomoFields input{width:48px;padding:4px 5px;border:1px solid var(--line);border-radius:5px;background:var(--surface2);color:var(--text);font:inherit;text-align:center;}
+.pomoHint{margin:6px 0 0;color:var(--muted);font-size:.63rem;}
+.pomoStatus{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+@media(max-width:760px){.plantWrap{grid-template-columns:1fr;gap:10px;}.plantIntro{grid-template-columns:minmax(150px,210px) minmax(0,1fr);}.pomoCard{max-width:none;}}
+@media(max-width:420px){.plantIntro{grid-template-columns:104px minmax(0,1fr);gap:8px;min-height:150px;padding:10px;}.plantArt{width:108px;}.plantEyebrow{margin-bottom:5px;font-size:.55rem;}.plantTitle{font-size:1rem;}.plantCaption{margin:5px 0 10px;font-size:.68rem;}.plantProgressLabels{font-size:.58rem;}.plantProgressLabels strong{font-size:.56rem;}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:18px;margin-bottom:16px;}
+
+#todayTasksCard:focus-within{position:relative;z-index:6;}
+
+#gridWrap{overflow-x:auto;padding:3px 0 5px;}
+#yearGrid{display:grid;grid-template-rows:repeat(7,12px);grid-auto-columns:12px;
+  column-gap:3px;row-gap:3px;width:max-content;}
+#monthGrid{display:grid;grid-template-columns:repeat(7,22px);gap:6px;}
+.monthNav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px;}
+.monthNav button{background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:.85rem;}
+.monthNav button:disabled{opacity:.3;cursor:default;}
+.monthNav span{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.8rem;color:var(--muted);min-width:120px;text-align:center;}
+.monthNav button.todayJump{display:none;width:auto;height:auto;padding:0 2px;background:transparent;border:0;border-radius:0;color:var(--muted);font-size:.72rem;font-weight:500;line-height:1;cursor:pointer;text-decoration:none;}
+.monthNav button.todayJump:hover{background:transparent;color:var(--l4);transform:none;}
+.monthNav button.todayJump:focus-visible{outline:2px solid var(--l3);outline-offset:3px;}
+.weekHead{display:grid;grid-template-columns:repeat(7,22px);gap:6px;margin-bottom:6px;}
+.weekHead span{font-size:.65rem;color:var(--muted);text-align:center;}
+.cell{width:12px;height:12px;border-radius:3px;cursor:pointer;background:var(--l0);
+  transition:transform .1s ease;}
+.cell:hover{transform:scale(1.25);}
+.cell.month{width:22px;height:22px;border-radius:4px;}
+.cell.today{outline:none;box-shadow:inset 0 0 0 1.5px var(--l4);}
+#cellTooltip{position:fixed;z-index:30;width:max-content;max-width:min(320px,calc(100vw - 24px));padding:7px 10px;border:1px solid var(--line);border-left:3px solid var(--l3);border-radius:7px;background:var(--surface);color:var(--text);font-size:.72rem;font-weight:600;line-height:1.35;white-space:normal;box-shadow:0 8px 22px var(--shadow);pointer-events:none;opacity:0;visibility:hidden;transform:translateY(3px);transition:opacity .12s ease,transform .12s ease,visibility .12s ease;}
+#cellTooltip.visible{opacity:1;visibility:visible;transform:translateY(0);}
+.l1{background:var(--l1);} .l2{background:var(--l2);}
+.l3{background:var(--l3);} .l4{background:var(--l4);}
+
+.heatmapMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 14px;margin:8px 0 0;}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0;color:var(--muted);font-size:.72rem;line-height:1.2;}
+.legendScale{display:flex;align-items:center;gap:4px;}
+.legend .cell{cursor:default;flex:0 0 13px;width:13px;height:13px;border-radius:3px;}
+.yearProgress{margin:0;color:var(--muted);font-size:.72rem;text-align:right;}
+.legend .cell:hover{transform:none;}
+@media(max-width:560px){.heatmapMeta{grid-template-columns:1fr;gap:6px;}.yearProgress{text-align:left;}}
+
+h2{font-weight:600;font-size:.95rem;margin:0 0 12px;}
+summary{font-weight:600;font-size:.95rem;cursor:pointer;}
+
+.taskRow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
+.taskRow:last-child{border-bottom:0;}
+.taskRow input[type=checkbox]{width:17px;height:17px;accent-color:var(--l3);cursor:pointer;}
+.taskRow span{flex:1;font-size:.92rem;}
+.taskRow button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 6px;transition:color .15s;}
+.taskRow button:hover{color:var(--text);}
+.addRow{display:flex;gap:8px;margin-top:10px;}
+.addRow input{flex:1;background:var(--surface2);border:1px solid var(--line);
+  border-radius:6px;padding:9px 10px;color:var(--text);font-size:.9rem;}
+.addRow button{background:var(--l3);color:var(--onAccent);border:0;border-radius:6px;
+  padding:9px 16px;font-weight:600;cursor:pointer;font-size:.85rem;transition:opacity .15s;}
+.addRow button:hover{opacity:.85;}
+.suggestWrap{position:relative;margin-top:10px;}
+.suggestBox{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);
+  background:var(--surface2);border:1px solid var(--line);border-radius:6px;
+  max-height:160px;overflow-y:auto;z-index:5;}
+.suggestRow{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;font-size:.85rem;cursor:pointer;}
+.suggestRow:hover{background:var(--surface);}
+.suggestRow span{flex:1;cursor:pointer;}
+.suggestRow button{background:none;border:0;color:var(--muted);cursor:pointer;
+  font-size:.85rem;padding:2px 6px;}
+.empty{color:var(--muted);font-size:.85rem;padding:8px 0;}
+
+#resetBanner{display:none;border-color:var(--l3);}
+#resetBanner .btns{display:flex;gap:10px;margin-top:12px;}
+#resetBanner button{border-radius:6px;padding:9px 14px;font-size:.82rem;cursor:pointer;}
+#resetYes{background:var(--l3);color:var(--onAccent);border:0;font-weight:600;}
+#resetNo{background:var(--surface2);color:var(--text);border:1px solid var(--line);}
+.historyReset{margin:0 0 16px;}
+.historyReset>summary{display:inline-flex;align-items:center;list-style:none;padding:4px 0;color:var(--muted);font-size:.72rem;font-weight:400;cursor:pointer;transition:color .16s ease;}
+.historyReset>summary::-webkit-details-marker{display:none;}
+.historyReset>summary::before{content:"";width:0;height:0;margin-right:7px;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:5px solid currentColor;transition:transform .18s ease;}
+.historyReset>summary:hover{color:var(--text);}
+.historyReset[open]{padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;}
+.historyReset[open]>summary::before{transform:rotate(90deg);}
+.historyResetWarning{color:var(--danger);font-size:.7rem;margin-bottom:8px;}
+.historyReset button{background:none;border:1px solid var(--danger);color:var(--danger);font-size:.75rem;cursor:pointer;border-radius:6px;padding:6px 12px;}
+.historyReset button:hover{background:color-mix(in srgb,var(--danger) 8%,transparent);}
+
+#dayPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  align-items:center;justify-content:center;padding:16px;z-index:10;}
+#dayPanel.open{display:flex;}
+#dayCard{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:20px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto;}
+#dayCard h3{margin:0 0 4px;font-size:1rem;}
+#dayCard .pct{font-family:'JetBrains Mono',ui-monospace,monospace;color:var(--l4);font-size:1.2rem;font-weight:600;margin-bottom:14px;}
+#dayCard .close{display:block;width:100%;margin-top:14px;background:var(--surface2);
+  border:1px solid var(--line);color:var(--text);padding:9px;border-radius:6px;
+  cursor:pointer;font-size:.82rem;}
+
+#confirmPanel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  align-items:center;justify-content:center;padding:16px;z-index:20;}
+#confirmPanel.open{display:flex;}
+#confirmCard{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:20px;max-width:340px;width:100%;}
+#confirmCard h3{margin:0 0 8px;font-size:1rem;}
+#confirmCard p{color:var(--muted);font-size:.85rem;margin:0;}
+#confirmCard .btns{display:flex;gap:10px;margin-top:16px;}
+#confirmYes{background:#c0685f;color:#fff;border:0;border-radius:6px;padding:9px 14px;font-weight:600;cursor:pointer;font-size:.82rem;}
+#confirmCancel{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:9px 14px;cursor:pointer;font-size:.82rem;}
+.planTomorrow>summary{display:flex;align-items:center;list-style:none;}
+.planTomorrow>summary::-webkit-details-marker{display:none;}
+.planTomorrow>summary::before{content:"";width:0;height:0;margin-right:10px;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:6px solid currentColor;transition:transform .2s ease;}
+@keyframes unfold{from{opacity:0;transform:translateY(-5px);clip-path:inset(0 0 18% 0);}to{opacity:1;transform:none;clip-path:none;}}
+@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+@keyframes modalIn{from{opacity:0;transform:translateY(9px) scale(.985);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes riseIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
+@keyframes revealIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+@keyframes checkPop{0%{transform:scale(.85);}55%{transform:scale(1.12);}100%{transform:scale(1);}}
+@media(prefers-reduced-motion:no-preference){
+  body>.topHeader,body>.plantWrap,body>.hero,body>.weekStrip,body>.bar,body>#resetBanner,body>.card,body>details.card{animation:riseIn .38s ease-out both;}
+  body>.plantWrap{animation-delay:.05s;} body>.hero{animation-delay:.09s;} body>.weekStrip{animation-delay:.12s;} body>.bar{animation-delay:.15s;}
+  body>#resetBanner,body>.card,body>details.card{animation-delay:.18s;}
+  .card,.pomoCard,.toggle,.taskRow,.addRow input,.suggestBox,#dayCard,#confirmCard{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease;}
+  .card:hover{border-color:color-mix(in srgb,var(--line) 65%,var(--muted));}
+  button{transition:color .16s ease,background-color .16s ease,border-color .16s ease,opacity .16s ease,transform .16s ease;}
+  button:active{transform:scale(.97);}
+  .taskRow{animation:revealIn .22s ease-out both;}
+  .taskRow input[type=checkbox]{transition:transform .16s ease,filter .16s ease;}
+  .taskRow input[type=checkbox]:checked{animation:checkPop .24s ease-out;}
+  .taskRow span{transition:color .18s ease,text-decoration-color .18s ease;}
+  .taskRow input[type=checkbox]:checked+span{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 50%,transparent);}
+  .cell{transition:transform .14s ease,background-color .28s ease,opacity .2s ease;}
+  .weekStrip .cell{animation:revealIn .24s ease-out both;}
+  .weekStrip .cell:nth-child(2){animation-delay:.02s}.weekStrip .cell:nth-child(3){animation-delay:.04s}.weekStrip .cell:nth-child(4){animation-delay:.06s}.weekStrip .cell:nth-child(5){animation-delay:.08s}.weekStrip .cell:nth-child(6){animation-delay:.1s}.weekStrip .cell:nth-child(7){animation-delay:.12s}
+  .suggestRow{animation:revealIn .16s ease-out both;}
+  details[open]>:not(summary){animation:revealIn .22s ease-out both;}
+  .planTomorrow[open]>summary::before{transform:rotate(90deg);}
+  .planTomorrow>summary{transition:color .16s ease,transform .16s ease;}
+  .planTomorrow>summary:hover{color:var(--accent);}
+  .planTomorrow>summary:active{transform:scale(.995);}
+  .planTomorrow[open]>:not(summary){animation:unfold .3s cubic-bezier(.2,.7,.2,1) both;}
+  #confirmPanel.open,#dayPanel.open{animation:overlayIn .18s ease-out both;}
+  #confirmPanel.open #confirmCard,#dayPanel.open #dayCard{animation:modalIn .22s cubic-bezier(.2,.7,.2,1) both;}
+  #pomoProgress{transition:width .35s linear;}
+  #pomoToggle{transition:color .16s ease,background-color .16s ease,border-color .16s ease,transform .16s ease;}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important;}
+}
+</style>
+</head>
+<body>
+
+<div class="topHeader">
+  <h1>ASCEND</h1>
+</div>
+<div class="plantWrap">
+  <div class="plantIntro">
+    <div class="plantArt"><svg id="plantSvg" viewBox="72 10 96 170" role="img" aria-label="Your growing plant"></svg></div>
+    <div class="plantCopy">
+      <div class="plantEyebrow">30-day growth</div>
+      <h2 class="plantTitle" id="plantTitle">Start with one good day.</h2>
+      <p class="plantCaption" id="plantCaption">Show up each day and watch your plant come to life.</p>
+      <div class="plantProgressLabels"><span id="plantProgressLabel">Day 0 of 30</span><strong id="plantProgressPercent">0%</strong></div>
+      <div class="plantProgressTrack" id="plantProgressTrack" role="progressbar" aria-label="Plant growth" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><span id="plantProgressFill"></span></div>
+    </div>
+  </div>
+  <section class="pomoCard" aria-label="Pomodoro timer">
+    <div class="pomoHead"><span class="pomoTitle">Focus timer</span><span class="pomoToday"><strong id="pomoToday">0m</strong> focused today <button id="pomoFocusReset" type="button" title="Reset today’s focus time" aria-label="Reset today’s focus time">↻</button></span></div>
+    <div class="pomoModes" role="group" aria-label="Timer mode">
+      <button class="pomoModeChoice active" id="pomoFocusMode" type="button" data-mode="focus" aria-pressed="true">Focus <b id="pomoFocusLength">25m</b></button>
+      <button class="pomoModeChoice" id="pomoBreakMode" type="button" data-mode="break" aria-pressed="false">Break <b id="pomoBreakLength">5m</b></button>
+    </div>
+    <div class="pomoRow">
+      <div class="pomoClock" id="pomoClock">25:00</div>
+      <div class="pomoButtons"><button id="pomoToggle" type="button">Start focus</button><button id="pomoReset" type="button">Reset</button></div>
+    </div>
+    <div class="pomoTrack" aria-hidden="true"><span id="pomoProgress"></span></div>
+    <details class="pomoSettings">
+      <summary>Set times</summary>
+      <div class="pomoFields">
+        <label for="pomoFocusMinutes">Focus <input id="pomoFocusMinutes" type="number" min="1" max="180" step="1" value="25"> min</label>
+        <label for="pomoBreakMinutes">Break <input id="pomoBreakMinutes" type="number" min="1" max="60" step="1" value="5"> min</label>
+      </div>
+      <p class="pomoHint">Changes apply next session.</p>
+    </details>
+    <div class="pomoStatus" id="pomoStatus" aria-live="polite"></div>
+  </section>
+</div>
+
+</main>
+
+<div class="hero">
+  <div class="heroLabel">Today</div>
+  <div id="heroPct">0%</div>
+  <div id="heroFrac">0/0 done</div>
+  <div class="heroBar"><div class="heroBarFill" id="heroBarFill"></div></div>
+</div>
+
+<div class="weekStrip" id="weekStrip"></div>
+
+<div class="bar">
+  <div class="streak" aria-label="Streak statistics">
+    <div class="streakItem"><span class="streakLabel">Current streak</span><span class="streakValue"><b id="streakVal">0</b> <span id="streakUnit">days</span></span></div>
+    <div class="streakItem"><span class="streakLabel">Best streak</span><span class="streakValue"><b id="bestStreak">0</b> <span id="bestStreakUnit">days</span><span id="bestStreakBadge" aria-hidden="true"></span></span></div>
+    <div class="streakItem"><span class="streakLabel">Days worked this year</span><span class="streakValue"><b id="yearStat">0</b> <span id="yearStatUnit">days</span></span></div>
+    <p class="streakHint">Any completed task counts as a workday. Streaks and plant growth need at least 80% of that day’s tasks completed.</p>
+  </div>
+</div>
+
+<div id="resetBanner" class="card">
+  <strong>Happy New Year 🌱</strong> — want to reset Ascend for the new year? Your task list stays exactly as is; only the daily history clears.
+  <div style="color:var(--danger);font-size:.75rem;margin-top:8px;">⚠ This can't be undone.</div>
+  <div class="btns">
+    <button id="resetYes">Reset for the new year</button>
+    <button id="resetNo">Not now</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toggle heatmapViewToggle">
+    <button id="btnYear" class="active">Year</button>
+    <button id="btnMonth">Month</button>
+  </div>
+  <div id="gridWrap">
+    <div id="yearGrid"></div>
+    <div id="monthWrap" style="display:none;">
+      <div class="monthNav">
+        <button id="prevMonth">‹</button>
+        <span id="monthLabel"></span>
+        <button id="nextMonth">›</button>
+        <button id="jumpToday" class="todayJump">Today</button>
+      </div>
+      <div class="weekHead">
+        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+      </div>
+      <div id="monthGrid"></div>
+    </div>
+  </div>
+  <div class="heatmapMeta">
+    <div class="legend" aria-label="Task completion scale">
+      <span>Task completion</span>
+      <span>Less</span>
+      <div class="legendScale" aria-hidden="true"><div class="cell"></div><div class="cell l1"></div><div class="cell l2"></div>
+      <div class="cell l3"></div><div class="cell l4"></div></div>
+      <span>More</span>
+    </div>
+    <div class="yearProgress" id="yearProgress" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="card" id="todayTasksCard">
+  <h2>Today's tasks <span id="todayCount" style="color:var(--muted);font-weight:400;font-size:.8rem;"></span> <span id="todayDone" style="color:var(--l3);font-weight:600;font-size:.8rem;"></span></h2>
+  <div id="todayList"></div>
+</div>
+
+<details class="card planTomorrow">
+  <summary>Plan tomorrow <span id="tomorrowCount" style="color:var(--muted);font-weight:400;font-size:.8rem;"></span></summary>
+  <div id="tomorrowList" style="margin-top:12px;"></div>
+</details>
+
+<details class="historyReset">
+  <summary>Reset history</summary>
+  <div class="historyResetWarning">⚠ This clears every logged day and can't be undone.</div>
+  <button id="manualReset">Reset daily history</button>
+</details>
+<div class="appearanceFooter">
+  <div class="appearanceFooterActions"><button class="themeToggle" id="appearanceButton" type="button" aria-expanded="false" aria-controls="appearancePanel">Appearance</button></div>
+  <section class="appearancePanel" id="appearancePanel" aria-label="Appearance settings" hidden>
+  <div class="appearancePanelHead"><span>Appearance</span><button class="appearanceReset" id="appearanceReset" type="button">Reset to default</button></div>
+  <div class="appearanceSectionTitle">Visual style</div>
+  <div class="appearanceGroup">
+    <div class="appearanceRow">
+      <span class="appearanceRowLabel">Mode</span>
+      <div class="modeChoices" role="group" aria-label="Color mode">
+        <button class="modeChoice" type="button" data-mode-choice="system" aria-pressed="false"><span class="modePreview system"></span>System</button>
+        <button class="modeChoice" type="button" data-mode-choice="light" aria-pressed="true"><span class="modePreview"></span>Light</button>
+        <button class="modeChoice" type="button" data-mode-choice="dark" aria-pressed="false"><span class="modePreview dark"></span>Dark</button>
+      </div>
+    </div>
+  </div>
+  <div class="appearanceGroup" style="margin-top:16px;">
+    <div class="appearanceRow">
+      <span class="appearanceRowLabel">Accent</span>
+      <div class="appearanceControls">
+        <div class="accentMenuWrap">
+          <button class="accentMenuButton" id="accentMenuButton" type="button" aria-expanded="false" aria-controls="accentMenu"><span class="accentMenuDot" id="accentCurrentDot"></span><span id="accentCurrentLabel">Default</span><span class="accentChevron">⌄</span></button>
+          <div class="accentMenu" id="accentMenu" role="listbox" aria-label="Accent color" hidden>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="default" aria-selected="true"><span class="accentMenuDot"></span><span>Default</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="blue" aria-selected="false"><span class="accentMenuDot"></span><span>Blue</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="green" aria-selected="false"><span class="accentMenuDot"></span><span>Green</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="yellow" aria-selected="false"><span class="accentMenuDot"></span><span>Yellow</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="pink" aria-selected="false"><span class="accentMenuDot"></span><span>Pink</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="orange" aria-selected="false"><span class="accentMenuDot"></span><span>Orange</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="purple" aria-selected="false"><span class="accentMenuDot"></span><span>Purple</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="white" aria-selected="false"><span class="accentMenuDot"></span><span>White</span><span class="accentCheck">✓</span></button>
+            <button class="accentMenuOption" type="button" role="option" data-accent-option="custom" aria-selected="false"><span class="accentMenuDot"></span><span>Custom</span><span class="accentCheck">✓</span></button>
+          </div>
+        </div>
+        <div class="colorControl" id="customAccentControls" hidden><button class="colorPickerButton" type="button" data-picker-toggle="accent" aria-label="Open accent color picker" aria-expanded="false" aria-controls="accentPickerPopup"><span class="colorPickerSwatch" data-picker-swatch="accent"></span></button><input class="colorHex" id="accentHex" type="text" value="#51A94E" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Accent hex code"><div class="colorPickerPopup" id="accentPickerPopup" data-color-popup="accent" hidden><div class="colorSvPicker" data-color-sv="accent" role="slider" tabindex="0" aria-label="Accent color saturation and brightness" aria-valuetext=""><span class="colorPickerMarker"></span></div><input class="colorHue" type="range" min="0" max="359" value="120" data-color-hue="accent" aria-label="Accent color hue"></div></div>
+      </div>
+    </div>
+    <div class="appearanceRow">
+      <label class="appearanceRowLabel" for="backgroundHex">Background</label>
+      <div class="colorControl"><button class="colorPickerButton" type="button" data-picker-toggle="background" aria-label="Open background color picker" aria-expanded="false" aria-controls="backgroundPickerPopup"><span class="colorPickerSwatch" data-picker-swatch="background"></span></button><input class="colorHex" id="backgroundHex" type="text" value="#F7F6F1" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Background hex code"><div class="colorPickerPopup" id="backgroundPickerPopup" data-color-popup="background" hidden><div class="colorSvPicker" data-color-sv="background" role="slider" tabindex="0" aria-label="Background color saturation and brightness" aria-valuetext=""><span class="colorPickerMarker"></span></div><input class="colorHue" type="range" min="0" max="359" value="40" data-color-hue="background" aria-label="Background color hue"></div></div>
+    </div>
+    <div class="appearanceRow">
+      <label class="appearanceRowLabel" for="foregroundHex">Foreground</label>
+      <div class="colorControl"><button class="colorPickerButton" type="button" data-picker-toggle="foreground" aria-label="Open foreground color picker" aria-expanded="false" aria-controls="foregroundPickerPopup"><span class="colorPickerSwatch" data-picker-swatch="foreground"></span></button><input class="colorHex" id="foregroundHex" type="text" value="#25241F" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Foreground hex code"><div class="colorPickerPopup" id="foregroundPickerPopup" data-color-popup="foreground" hidden><div class="colorSvPicker" data-color-sv="foreground" role="slider" tabindex="0" aria-label="Foreground color saturation and brightness" aria-valuetext=""><span class="colorPickerMarker"></span></div><input class="colorHue" type="range" min="0" max="359" value="0" data-color-hue="foreground" aria-label="Foreground color hue"></div></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<div id="dayPanel">
+  <div id="dayCard">
+    <h3 id="dayTitle"></h3>
+    <div class="pct" id="dayPct"></div>
+    <button class="close" id="closeDay">Close</button>
+  </div>
+</div>
+
+<div id="confirmPanel">
+  <div id="confirmCard">
+    <h3>Are you sure?</h3>
+    <p id="confirmMsg"></p>
+    <div class="btns">
+      <button id="confirmYes">Yes, reset</button>
+      <button id="confirmCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="cellTooltip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+const LS_TASKS = 'field_tasks';
+const LS_LOG = 'field_log'; // {dateStr: [taskId,...]}
+const LS_SELECT = 'field_select'; // {dateStr: [taskId,...] picked for that day}
+const LS_ACTIVE_DATE = 'field_active_date';
+
+function load(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function save(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+}
+
+const APPEARANCE_KEY = 'field_appearance';
+const ACCENT_THEMES = {
+  default:{label:'Default',light:'#51a94e',dark:'#83c878',swatch:'#51a94e'},
+  blue:{label:'Blue',light:'#3b82f6',dark:'#7baaff',swatch:'#3b82f6'},
+  green:{label:'Green',light:'#32976c',dark:'#70c994',swatch:'#14b8a6'},
+  yellow:{label:'Yellow',light:'#c99517',dark:'#e7c463',swatch:'#facc15'},
+  pink:{label:'Pink',light:'#c85e82',dark:'#e78aaa',swatch:'#f472b6'},
+  orange:{label:'Orange',light:'#d8783e',dark:'#ed9b6d',swatch:'#fb8064'},
+  purple:{label:'Purple',light:'#8d69c7',dark:'#b89ce5',swatch:'#a855f7'},
+  white:{label:'White',light:'#42464d',dark:'#f1f3f4',swatch:'#f4f4f5'},
+  custom:{label:'Custom',light:'#51a94e',dark:'#83c878',swatch:'#51a94e'}
+};
+const BASE_COLORS={light:{background:'#f7f6f1',foreground:'#25241f'},dark:{background:'#171816',foreground:'#efeee8'}};
+let appearanceSaved=load(APPEARANCE_KEY,{});
+if(!appearanceSaved || typeof appearanceSaved!=='object' || Array.isArray(appearanceSaved)) appearanceSaved={};
+let selectedMode=['system','light','dark'].includes(appearanceSaved.mode) ? appearanceSaved.mode : (localStorage.getItem('field_theme')==='dark'?'dark':'light');
+let activeAccent=ACCENT_THEMES[appearanceSaved.accent] ? appearanceSaved.accent : (ACCENT_THEMES[appearanceSaved.preset] ? appearanceSaved.preset : 'default');
+let appearanceColors={};
+const savedColors=appearanceSaved.colors || appearanceSaved.customColors || {};
+for(const mode of ['light','dark']){
+  const stored=savedColors[mode];
+  if(!stored || typeof stored!=='object' || Array.isArray(stored)) continue;
+  const custom={};
+  for(const [newKey,oldKey] of [['accent','accent'],['background','background'],['foreground','foreground']]){
+    const raw=stored[newKey] || (oldKey==='background'?stored.bg:oldKey==='foreground'?stored.text:null);
+    const hex=typeof raw==='string' ? normalizeHex(raw) : null;
+    if(hex) custom[newKey]=hex;
+  }
+  if(Object.keys(custom).length) appearanceColors[mode]=custom;
+}
+function actualMode(){
+  if(selectedMode!=='system') return selectedMode;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+if(!appearanceSaved.accent && appearanceSaved.preset && appearanceColors[actualMode()]?.accent){
+  const mode=actualMode();
+  if(appearanceColors[mode].accent!==ACCENT_THEMES[activeAccent][mode]) activeAccent='custom';
+}
+function mixHex(a,b,amount){
+  const parse=h=>h.match(/[0-9a-f]{2}/gi).map(part=>parseInt(part,16));
+  const x=parse(a),y=parse(b);
+  return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*amount).toString(16).padStart(2,'0')).join('');
+}
+function normalizeHex(value){
+  const hex=String(value).trim().replace(/^#/,'');
+  return /^[0-9a-f]{6}$/i.test(hex)?'#'+hex.toLowerCase():null;
+}
+function hexToHsv(hex){
+  const values=hex.match(/[0-9a-f]{2}/gi).map(value=>parseInt(value,16)/255);
+  const [r,g,b]=values,max=Math.max(...values),min=Math.min(...values),delta=max-min;
+  let h=0;
+  if(delta){if(max===r) h=60*(((g-b)/delta)%6);else if(max===g) h=60*((b-r)/delta+2);else h=60*((r-g)/delta+4);}
+  if(h<0) h+=360;
+  return {h,s:max===0?0:delta/max,v:max};
+}
+function hsvToHex(h,s,v){
+  const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;
+  const section=Math.floor(h/60);
+  const rgb=section===0?[c,x,0]:section===1?[x,c,0]:section===2?[0,c,x]:section===3?[0,x,c]:section===4?[x,0,c]:[c,0,x];
+  return '#'+rgb.map(value=>Math.round((value+m)*255).toString(16).padStart(2,'0')).join('');
+}
+function syncColorPicker(key,hex){
+  const hsv=hexToHsv(hex),area=document.querySelector(`[data-color-sv="${key}"]`),hue=document.querySelector(`[data-color-hue="${key}"]`),swatch=document.querySelector(`[data-picker-swatch="${key}"]`);
+  if(area){area.style.setProperty('--picker-hue',hsv.h);area.querySelector('.colorPickerMarker').style.left=(hsv.s*100)+'%';area.querySelector('.colorPickerMarker').style.top=((1-hsv.v)*100)+'%';area.setAttribute('aria-valuetext',hex.toUpperCase());}
+  if(hue) hue.value=String(Math.round(hsv.h)%360);
+  if(swatch) swatch.style.setProperty('--pickerColor',hex);
+}
+function currentColors(){
+  const mode=actualMode(),base=BASE_COLORS[mode],custom=appearanceColors[mode] || {};
+  const accent=activeAccent==='custom' ? (custom.accent || ACCENT_THEMES.default[mode]) : ACCENT_THEMES[activeAccent][mode];
+  return {mode,accent,background:custom.background || base.background,foreground:custom.foreground || base.foreground};
+}
+function saveAppearance(){
+  save(APPEARANCE_KEY,{mode:selectedMode,accent:activeAccent,colors:appearanceColors});
+  try{localStorage.setItem('field_theme',selectedMode);}catch(e){}
+}
+function renderAppearance(){
+  const colors=currentColors(),root=document.documentElement;
+  root.dataset.theme=colors.mode;
+  root.style.setProperty('--bg',colors.background);
+  root.style.setProperty('--text',colors.foreground);
+  root.style.setProperty('--accent',colors.accent);
+  root.style.setProperty('--surface',mixHex(colors.background,colors.foreground,colors.mode==='dark'?.07:.03));
+  root.style.setProperty('--surface2',mixHex(colors.background,colors.foreground,colors.mode==='dark'?.12:.07));
+  root.style.setProperty('--muted',mixHex(colors.background,colors.foreground,colors.mode==='dark'?.66:.55));
+  root.style.setProperty('--line',mixHex(colors.background,colors.foreground,colors.mode==='dark'?.16:.10));
+  const rampBase=mixHex(colors.background,colors.foreground,colors.mode==='dark'?.12:.07);
+  root.style.setProperty('--l0',rampBase);
+  root.style.setProperty('--l1',mixHex(rampBase,colors.accent,colors.mode==='dark'?.22:.18));
+  root.style.setProperty('--l2',mixHex(rampBase,colors.accent,colors.mode==='dark'?.44:.40));
+  root.style.setProperty('--l3',mixHex(rampBase,colors.accent,colors.mode==='dark'?.70:.67));
+  root.style.setProperty('--l4',colors.accent);
+  const rgb=colors.accent.match(/[0-9a-f]{2}/gi).map(value=>parseInt(value,16));
+  const luminance=rgb[0]*.299+rgb[1]*.587+rgb[2]*.114;
+  root.style.setProperty('--onAccent',luminance<145?'#ffffff':'#102014');
+  document.querySelectorAll('[data-mode-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.modeChoice===selectedMode)));
+  document.getElementById('accentCurrentLabel').textContent=ACCENT_THEMES[activeAccent].label;
+  document.getElementById('accentCurrentDot').style.setProperty('--swatch',activeAccent==='custom'?colors.accent:(ACCENT_THEMES[activeAccent].swatch || colors.accent));
+  document.querySelectorAll('[data-accent-option]').forEach(button=>{
+    const name=button.dataset.accentOption,theme=ACCENT_THEMES[name];
+    button.setAttribute('aria-selected',String(name===activeAccent));
+    button.querySelector('.accentMenuDot').style.setProperty('--swatch',name==='custom'?colors.accent:(name==='white'?(colors.mode==='dark'?'#f1f3f4':'#42464d'):theme.swatch));
+  });
+  const customAccent=activeAccent==='custom';
+  document.getElementById('customAccentControls').hidden=!customAccent;
+  document.getElementById('accentHex').value=colors.accent.toUpperCase();
+  document.getElementById('backgroundHex').value=colors.background.toUpperCase();
+  document.getElementById('foregroundHex').value=colors.foreground.toUpperCase();
+  syncColorPicker('accent',colors.accent);
+  syncColorPicker('background',colors.background);
+  syncColorPicker('foreground',colors.foreground);
+  document.querySelectorAll('.colorHex').forEach(input=>input.setAttribute('aria-invalid','false'));
+}
+function setAppearanceMode(mode){
+  if(!['system','light','dark'].includes(mode)) return;
+  selectedMode=mode;saveAppearance();renderAppearance();
+}
+function setAccentTheme(name){
+  if(!ACCENT_THEMES[name]) return;
+  activeAccent=name;saveAppearance();renderAppearance();closeAccentMenu();
+  if(name!=='custom') closeColorPickers();
+}
+function setAppearanceColor(key,value){
+  const hex=normalizeHex(value);
+  const input=document.getElementById(key==='accent'?'accentHex':key==='background'?'backgroundHex':'foregroundHex');
+  if(!hex){input.setAttribute('aria-invalid','true');return;}
+  const mode=actualMode();
+  appearanceColors[mode]={...(appearanceColors[mode] || {}),[key]:hex};
+  if(key==='accent') activeAccent='custom';
+  saveAppearance();renderAppearance();
+}
+function closeColorPickers(){
+  document.querySelectorAll('[data-color-popup]').forEach(popup=>popup.hidden=true);
+  document.querySelectorAll('[data-picker-toggle]').forEach(button=>button.setAttribute('aria-expanded','false'));
+}
+function toggleColorPicker(key,button){
+  const popup=document.querySelector(`[data-color-popup="${key}"]`),show=popup.hidden;
+  closeColorPickers();
+  popup.hidden=!show;
+  button.setAttribute('aria-expanded',String(show));
+}
+function closeAccentMenu(){
+  const menu=document.getElementById('accentMenu'),button=document.getElementById('accentMenuButton');
+  menu.hidden=true;button.setAttribute('aria-expanded','false');
+}
+function closeAppearance(){
+  const panel=document.getElementById('appearancePanel'),button=document.getElementById('appearanceButton');
+  panel.hidden=true;button.setAttribute('aria-expanded','false');closeAccentMenu();closeColorPickers();
+}
+renderAppearance();
+document.querySelectorAll('[data-mode-choice]').forEach(button=>button.addEventListener('click',()=>setAppearanceMode(button.dataset.modeChoice)));
+document.querySelectorAll('[data-accent-option]').forEach(button=>button.addEventListener('click',()=>setAccentTheme(button.dataset.accentOption)));
+document.querySelectorAll('[data-picker-toggle]').forEach(button=>button.addEventListener('click',()=>toggleColorPicker(button.dataset.pickerToggle,button)));
+const accentMenuButton=document.getElementById('accentMenuButton'),accentMenu=document.getElementById('accentMenu');
+accentMenuButton.addEventListener('click',()=>{accentMenu.hidden=!accentMenu.hidden;accentMenuButton.setAttribute('aria-expanded',String(!accentMenu.hidden));});
+document.querySelectorAll('[data-color-hue]').forEach(input=>input.addEventListener('input',()=>{
+  const key=input.dataset.colorHue,hsv=hexToHsv(currentColors()[key]);
+  setAppearanceColor(key,hsvToHex(Number(input.value),hsv.s,hsv.v));
+}));
+document.querySelectorAll('[data-color-sv]').forEach(area=>{
+  const key=area.dataset.colorSv;
+  const update=event=>{
+    const rect=area.getBoundingClientRect(),s=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)),v=1-Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));
+    const hue=Number(document.querySelector(`[data-color-hue="${key}"]`).value);
+    setAppearanceColor(key,hsvToHex(hue,s,v));
+  };
+  area.addEventListener('pointerdown',event=>{event.preventDefault();area.setPointerCapture(event.pointerId);update(event);});
+  area.addEventListener('pointermove',event=>{if(event.buttons || event.pressure>0) update(event);});
+  area.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+    event.preventDefault();const hsv=hexToHsv(currentColors()[key]);
+    if(event.key==='ArrowLeft') hsv.s=Math.max(0,hsv.s-.02);if(event.key==='ArrowRight') hsv.s=Math.min(1,hsv.s+.02);
+    if(event.key==='ArrowUp') hsv.v=Math.min(1,hsv.v+.02);if(event.key==='ArrowDown') hsv.v=Math.max(0,hsv.v-.02);
+    setAppearanceColor(key,hsvToHex(hsv.h,hsv.s,hsv.v));
+  });
+});
+[['accentHex','accent'],['backgroundHex','background'],['foregroundHex','foreground']].forEach(([id,key])=>{
+  const input=document.getElementById(id);
+  input.addEventListener('change',()=>setAppearanceColor(key,input.value));
+  input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
+});
+const appearanceButton=document.getElementById('appearanceButton'),appearancePanel=document.getElementById('appearancePanel');
+appearanceButton.addEventListener('click',()=>{const opening=appearancePanel.hidden;appearancePanel.hidden=!opening;appearanceButton.setAttribute('aria-expanded',String(opening));if(!opening){closeAccentMenu();closeColorPickers();}});
+document.getElementById('appearanceReset').addEventListener('click',()=>{
+  selectedMode='light';activeAccent='default';appearanceColors={};saveAppearance();renderAppearance();closeAppearance();
+});
+document.addEventListener('click',event=>{
+  if(!appearancePanel.hidden && !appearancePanel.contains(event.target) && !appearanceButton.contains(event.target)){closeAppearance();return;}
+  if(!accentMenu.hidden && !accentMenu.contains(event.target) && !accentMenuButton.contains(event.target)) closeAccentMenu();
+  if(!event.target.closest('.colorControl')) closeColorPickers();
+});
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape') return;
+  const openPopup=document.querySelector('[data-color-popup]:not([hidden])');
+  if(openPopup){const key=openPopup.dataset.colorPopup;closeColorPickers();document.querySelector(`[data-picker-toggle="${key}"]`).focus();}
+  else if(!accentMenu.hidden){closeAccentMenu();accentMenuButton.focus();}
+  else if(!appearancePanel.hidden){closeAppearance();appearanceButton.focus();}
+});
+if(window.matchMedia){
+  const systemMode=window.matchMedia('(prefers-color-scheme: dark)');
+  const onSystemModeChange=()=>{if(selectedMode==='system') renderAppearance();};
+  if(systemMode.addEventListener) systemMode.addEventListener('change',onSystemModeChange);
+  else if(systemMode.addListener) systemMode.addListener(onSystemModeChange);
+}
+
+let tasks = load(LS_TASKS, [
+  {id:'t1', name:'1 hr deep work'},
+  {id:'t2', name:'Exercise'},
+  {id:'t3', name:'No social media before noon'}
+]);
+let log = load(LS_LOG, {});
+let selections = load(LS_SELECT, {});
+function todayStr(d=new Date()){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function selectedForDay(ds){
+  if(selections[ds]) return selections[ds].filter(id=>tasks.some(t=>t.id===id));
+  return tasks.map(t=>t.id);
+}
+function setSelectedForDay(ds, ids){
+  selections[ds] = ids;
+  save(LS_SELECT, selections);
+}
+function pct(dateStr){
+  const sel = selectedForDay(dateStr);
+  const done = (log[dateStr]||[]).filter(id=>sel.includes(id)).length;
+  if(sel.length===0) return done>0 ? 1 : 0;
+  return done/sel.length;
+}
+function levelClass(p){
+  if(p<=0) return '';
+  if(p<0.26) return 'l1';
+  if(p<0.51) return 'l2';
+  if(p<0.76) return 'l3';
+  return 'l4';
+}
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+let heroWasFull = false;
+function burstConfetti(){
+  const colors = ['var(--l4)','var(--l3)','var(--l2)','#ffd166','#ff6b6b','#4dabf7'];
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;';
+  document.body.appendChild(container);
+  const heroRect = document.querySelector('.hero').getBoundingClientRect();
+  const originX = heroRect.left + heroRect.width/2;
+  const originY = heroRect.top + heroRect.height/2;
+  for(let i=0;i<28;i++){
+    const p = document.createElement('div');
+    const angle = Math.random()*Math.PI*2;
+    const dist = 70 + Math.random()*130;
+    const dx = Math.cos(angle)*dist;
+    const dy = Math.sin(angle)*dist - 30;
+    const size = 5 + Math.random()*5;
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText = `position:absolute;left:${originX}px;top:${originY}px;width:${size}px;height:${size}px;
+      background:${color};border-radius:${Math.random()<0.5?'50%':'2px'};
+      transform:translate(0,0) rotate(0deg);opacity:1;
+      transition:transform 900ms cubic-bezier(.17,.67,.3,.99), opacity 900ms ease;`;
+    container.appendChild(p);
+    requestAnimationFrame(()=>{
+      p.style.transform = `translate(${dx}px, ${dy+180}px) rotate(${Math.random()*360}deg)`;
+      p.style.opacity = '0';
+    });
+  }
+  setTimeout(()=> container.remove(), 950);
+}
+function renderHero(){
+  const ds = todayStr();
+  const selIds = selectedForDay(ds);
+  const done = (log[ds]||[]).filter(id=>selIds.includes(id)).length;
+  const p = pct(ds);
+  const pctEl = document.getElementById('heroPct');
+  pctEl.textContent = Math.round(p*100) + '%';
+  document.getElementById('heroFrac').textContent = selIds.length ? `${done}/${selIds.length} done today` : 'no tasks set';
+  document.getElementById('heroBarFill').style.width = Math.round(p*100) + '%';
+  if(p>=1 && !heroWasFull){
+    pctEl.classList.remove('pop'); void pctEl.offsetWidth; pctEl.classList.add('pop');
+    document.querySelectorAll('.cell.today').forEach(c=>{
+      c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
+    });
+    burstConfetti();
+  }
+  heroWasFull = (p>=1);
+
+}
+
+function renderWeekStrip(){
+  const el = document.getElementById('weekStrip');
+  el.innerHTML = '';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayDs = todayStr(today);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  for(let i=0; i<7; i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const ds = todayStr(d);
+    const future = d > today;
+    const dayProgress = future ? 0 : pct(ds);
+    const cell = document.createElement('div');
+    cell.className = 'cell ' + levelClass(dayProgress) + (ds===todayDs?' today':'');
+    if(future) cell.style.opacity = '0.35';
+    attachCellTooltip(cell, d.toDateString(), dayProgress);
+    el.appendChild(cell);
+  }
+}
+
+function tomorrowStr(){
+  const d = new Date();
+  d.setDate(d.getDate()+1);
+  return todayStr(d);
+}
+
+// ---- Shared day checklist (today / tomorrow) ----
+function renderDayChecklist(ds, listId, countId, doneId){
+  const el = document.getElementById(listId);
+  const selIds = selectedForDay(ds);
+  const done = new Set((log[ds]||[]).filter(id=>selIds.includes(id)));
+  const countEl = document.getElementById(countId);
+  if(countEl) countEl.textContent = selIds.length ? `(${done.size}/${selIds.length})` : '';
+  const doneEl = doneId ? document.getElementById(doneId) : null;
+  if(doneEl) doneEl.textContent = (selIds.length>0 && done.size===selIds.length) ? '✓ all done' : '';
+
+  el.innerHTML = selIds.length ? '' : '<div class="empty">No tasks for this day yet — add one below.</div>';
+  selIds.forEach(id=>{
+    const t = tasks.find(x=>x.id===id);
+    if(!t) return;
+    const row = document.createElement('div');
+    row.className = 'taskRow';
+    const checked = done.has(id) ? 'checked' : '';
+    row.innerHTML = `<input type="checkbox" ${checked}><span title="Click to rename">${escapeHtml(t.name)}</span><button class="rmDay" aria-label="Not this day">✕</button>`;
+    row.querySelector('input').onchange = (e)=>{
+      let cur = new Set((log[ds]||[]).filter(x=>selIds.includes(x)));
+      if(e.target.checked) cur.add(id); else cur.delete(id);
+      log[ds] = Array.from(cur);
+      save(LS_LOG, log);
+      renderDayChecklist(ds, listId, countId, doneId);
+      renderGrids(); renderStreak(); renderYearStat(); renderHero(); renderWeekStrip();
+    };
+    row.querySelector('span').onclick = ()=>{
+      const span = row.querySelector('span');
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.value = t.name; inp.maxLength = 60;
+      inp.style.cssText = 'flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--text);font-size:.92rem;';
+      row.replaceChild(inp, span);
+      inp.focus(); inp.select();
+      const commitRename = ()=>{
+        const val = inp.value.trim();
+        if(val && val!==t.name){ t.name = val; save(LS_TASKS, tasks); }
+        renderDayChecklist(ds, listId, countId, doneId);
+      };
+      inp.addEventListener('keydown', e=>{
+        if(e.key==='Enter') commitRename();
+        if(e.key==='Escape') renderDayChecklist(ds, listId, countId, doneId);
+      });
+      inp.addEventListener('blur', commitRename);
+    };
+    row.querySelector('.rmDay').onclick = ()=>{
+      setSelectedForDay(ds, selIds.filter(x=>x!==id));
+      renderDayChecklist(ds, listId, countId, doneId);
+    };
+    el.appendChild(row);
+  });
+
+  const unselected = tasks.filter(t=>!selIds.includes(t.id));
+  const addWrap = document.createElement('div');
+  addWrap.className = 'suggestWrap';
+  addWrap.innerHTML = `<div class="addRow"><input type="text" placeholder="Add a task for this day" maxlength="60" autocomplete="off"><button>Add</button></div>
+    <div class="suggestBox"></div>`;
+  const input = addWrap.querySelector('input');
+  const suggestBox = addWrap.querySelector('.suggestBox');
+  // Keep the input focused until a recommendation click has been handled.
+  suggestBox.addEventListener('mousedown',event=>event.preventDefault());
+  function addTaskToDay(id){
+    if(!selIds.includes(id)) setSelectedForDay(ds, selIds.concat([id]));
+    renderDayChecklist(ds, listId, countId, doneId);
+  }
+  function renderSuggestions(){
+    const q = input.value.trim().toLowerCase();
+    const matches = unselected.filter(t=>t.name.toLowerCase().includes(q));
+    suggestBox.innerHTML = '';
+    if(!matches.length){ suggestBox.style.display = 'none'; return; }
+    suggestBox.style.display = 'block';
+    matches.forEach(t=>{
+      const row = document.createElement('div');
+      row.className = 'suggestRow';
+      row.innerHTML = `<span>${escapeHtml(t.name)}</span><button aria-label="Remove suggestion">✕</button>`;
+      row.onclick = (event)=>{
+        if(!event.target.closest('button')) addTaskToDay(t.id);
+      };
+      row.querySelector('button').onclick = (e)=>{
+        e.stopPropagation();
+        tasks = tasks.filter(x=>x.id!==t.id);
+        save(LS_TASKS, tasks);
+        renderDayChecklist(ds, listId, countId, doneId);
+      };
+      suggestBox.appendChild(row);
+    });
+  }
+  input.addEventListener('input', renderSuggestions);
+  input.addEventListener('focus', renderSuggestions);
+  input.addEventListener('blur', ()=>{ setTimeout(()=>{ suggestBox.style.display='none'; }, 150); });
+  const commit = ()=>{
+    const name = input.value.trim();
+    if(!name) return;
+    const existing = tasks.find(t=>t.name.toLowerCase()===name.toLowerCase());
+    let id;
+    if(existing){
+      id = existing.id;
+    } else {
+      id = 't'+Date.now();
+      tasks.push({id, name});
+      save(LS_TASKS, tasks);
+    }
+    addTaskToDay(id);
+  };
+  addWrap.querySelector('button').onclick = commit;
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } });
+  el.appendChild(addWrap);
+}
+function renderToday(){ renderDayChecklist(todayStr(), 'todayList', 'todayCount', 'todayDone'); }
+function renderTomorrow(){ renderDayChecklist(tomorrowStr(), 'tomorrowList', 'tomorrowCount', null); }
+
+// ---- Streak ----
+function dayHit(ds){
+  const p = pct(ds);
+  return p >= 0.8 || (p > 0 && selectedForDay(ds).length===0);
+}
+function renderStreak(){
+  let cur = 0;
+  let d = new Date();
+  while(dayHit(todayStr(d))){ cur++; d.setDate(d.getDate()-1); }
+
+  let longest = 0, run = 0;
+  let d2 = new Date();
+  d2.setDate(d2.getDate()-364);
+  for(let i=0;i<365;i++){
+    if(dayHit(todayStr(d2))){ run++; longest = Math.max(longest, run); }
+    else run = 0;
+    d2.setDate(d2.getDate()+1);
+  }
+  document.getElementById('streakVal').textContent = String(cur);
+  document.getElementById('streakUnit').textContent = cur===1 ? 'day' : 'days';
+  document.getElementById('bestStreak').textContent = String(longest);
+  document.getElementById('bestStreakUnit').textContent = longest===1 ? 'day' : 'days';
+  document.getElementById('bestStreakBadge').textContent = cur>0 && cur>=longest ? ' 🏆' : '';
+  renderPlant(countPlantProgressDays());
+}
+
+function countPlantProgressDays(){
+  const date=new Date();
+  date.setHours(0,0,0,0);
+  // An unfinished today is still in progress: carry yesterday's phase until today ends.
+  if(!dayHit(todayStr(date))) date.setDate(date.getDate()-1);
+  let days=0;
+  while(dayHit(todayStr(date))){
+    days++;
+    date.setDate(date.getDate()-1);
+  }
+  return days;
+}
+
+function plantSVG(stage){
+  if(stage<0) return [
+    '<path d="M82 171 H101 M139 171 H158" fill="none" stroke="var(--line)" stroke-width="1.4" stroke-linecap="round"/>',
+    '<path d="M101 171 Q120 162 139 171 Z" fill="color-mix(in srgb,var(--accent) 5%,var(--surface2))" stroke="var(--line)" stroke-width="1"/>',
+    '<path d="M117 167 C116 164 119 160 123 158 C126 162 125 166 122 168 C120 169 118 168 117 167Z" fill="none" stroke="var(--accent)" stroke-opacity=".58" stroke-width="1.4" stroke-linejoin="round"/>',
+    '<path d="M120 165 Q121 163 123 162" fill="none" stroke="var(--accent)" stroke-opacity=".5" stroke-width="1" stroke-linecap="round"/>',
+  ].join('');
+  const leaf = (x,y,angle,scale,tone) => '<g transform="translate('+x+' '+y+') rotate('+angle+') scale('+scale+')">' +
+    '<path d="M0 0 C9 -17 27 -22 41 -12 C35 2 17 8 0 0Z" fill="'+tone+'" stroke="var(--l4)" stroke-opacity=".4" stroke-width="1"/>' +
+    '<path d="M2 -1 Q20 -8 38 -12" fill="none" stroke="var(--l4)" stroke-opacity=".68" stroke-width="1.25" stroke-linecap="round"/>' +
+    '<path d="M17 -7 Q20 -13 23 -16 M27 -10 Q31 -13 33 -17" fill="none" stroke="var(--l4)" stroke-opacity=".42" stroke-width=".8" stroke-linecap="round"/></g>';
+  const leaves = [];
+  if(stage>=1){
+    leaves.push(leaf(120,145,-42,.78,'var(--l3)'));
+    leaves.push(leaf(120,145,138,.78,'var(--l2)'));
+  }
+  if(stage>=2){
+    leaves.push(leaf(120,129,197,.82,'var(--l2)'));
+    leaves.push(leaf(120,114,-31,.9,'var(--l3)'));
+  }
+  if(stage>=3){
+    leaves.push(leaf(120,107,200,.86,'var(--l3)'));
+    leaves.push(leaf(120,91,-27,.92,'var(--l2)'));
+  }
+  if(stage>=4){
+    leaves.push(leaf(120,81,204,.78,'var(--l2)'));
+    leaves.push(leaf(120,72,-24,.8,'var(--l3)'));
+  }
+  const topY = [166,137,108,80,61][stage];
+  const stem = stage===0 ? '' :
+    '<path d="M120 165 C112 143 130 '+(topY+24)+' 120 '+topY+'" fill="none" stroke="var(--l2)" stroke-opacity=".35" stroke-width="10" stroke-linecap="round"/>' +
+    '<path d="M120 165 C112 143 130 '+(topY+24)+' 120 '+topY+'" fill="none" stroke="url(#plantStem)" stroke-width="5" stroke-linecap="round"/>';
+  const bud = stage===3 ? '<path d="M120 83 C108 75 112 64 120 62 C128 64 132 75 120 83Z" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>' : '';
+  let bloom = '';
+  if(stage===4){
+    const outerPetals = Array.from({length:12},(_,i) => {
+      const angle = i*30;
+      return '<g transform="rotate('+angle+' 120 54)">' +
+        '<path d="M120 57 C106 49 104 38 108 30 C111 22 116 17 120 18 C124 17 129 22 132 30 C136 38 134 49 120 57Z" fill="url(#bloomPetal)" stroke="var(--accent)" stroke-opacity=".52" stroke-width="1.15"/>' +
+        '<path d="M120 53 Q120 38 120 23" fill="none" stroke="var(--accent)" stroke-opacity=".38" stroke-width=".85" stroke-linecap="round"/>' +
+        '</g>';
+    }).join('');
+    const innerPetals = Array.from({length:8},(_,i) => {
+      const angle = i*45+22.5;
+      return '<path d="M120 56 C111 49 111 40 115 33 C117 29 119 27 120 27 C121 27 123 29 125 33 C129 40 129 49 120 56Z" transform="rotate('+angle+' 120 54)" fill="url(#bloomInner)" stroke="var(--accent)" stroke-opacity=".38" stroke-width=".8"/>';
+    }).join('');
+    bloom = '<g>' +
+      outerPetals + innerPetals +
+      '<circle cx="120" cy="54" r="10.2" fill="url(#bloomHeart)" stroke="color-mix(in srgb,var(--accent) 25%,#fff)" stroke-width="1.5"/>' +
+      '</g>';
+  }
+  const seed = stage===0 ? [
+    '<g transform="rotate(-24 120 161)">',
+    '<path d="M109 161 C109 156 114 152 121 152 C128 152 132 156 131 161 C130 166 124 169 117 168 C112 167 109 164 109 161Z" fill="var(--accent)" stroke="color-mix(in srgb,var(--accent) 72%,var(--text))" stroke-opacity=".52" stroke-width="1.25"/>',
+    '<path d="M115 155 C119 158 122 162 123 167" fill="none" stroke="color-mix(in srgb,var(--accent) 35%,#fff)" stroke-opacity=".9" stroke-width="1.35" stroke-linecap="round"/>',
+    '<path d="M119 158 C121 160 123 162 124 164" fill="none" stroke="color-mix(in srgb,var(--accent) 60%,#fff)" stroke-opacity=".72" stroke-width=".8" stroke-linecap="round"/>',
+    '</g>',
+  ].join('') : '';
+  const ground = stage===0 ? [
+    '<path d="M82 171 H102 M138 171 H158" fill="none" stroke="var(--line)" stroke-width="1.4" stroke-linecap="round"/>',
+    seed,
+    '<path d="M102 171 Q120 162 138 171 Z" fill="color-mix(in srgb,var(--accent) 5%,var(--surface2))" stroke="var(--line)" stroke-width="1"/>',
+  ].join('') : '<path d="M82 171 H158" fill="none" stroke="var(--line)" stroke-width="1.4" stroke-linecap="round"/>';
+  return [
+    '<defs><linearGradient id="plantStem" x1="0" y1="1" x2="1" y2="0"><stop stop-color="var(--l4)"/><stop offset="1" stop-color="var(--l3)"/></linearGradient>',
+    '<linearGradient id="bloomPetal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="color-mix(in srgb,var(--accent) 35%,#fff)"/><stop offset=".58" stop-color="var(--accent)"/><stop offset="1" stop-color="color-mix(in srgb,var(--accent) 72%,#000)"/></linearGradient><linearGradient id="bloomInner" x1="0" y1="0" x2="0" y2="1"><stop stop-color="color-mix(in srgb,var(--accent) 28%,#fff)"/><stop offset="1" stop-color="color-mix(in srgb,var(--accent) 68%,#fff)"/></linearGradient><radialGradient id="bloomHeart" cx=".35" cy=".3" r=".8"><stop stop-color="color-mix(in srgb,var(--accent) 35%,#fff)"/><stop offset=".58" stop-color="var(--accent)"/><stop offset="1" stop-color="color-mix(in srgb,var(--accent) 72%,#000)"/></radialGradient></defs>',
+    ground,
+    stem, leaves.join(''), bud, bloom,
+  ].join('');
+}
+function renderPlant(progressDays){
+  // Plant progress is a consecutive run of successful days; a missed day starts a new run.
+  const days = Math.max(0,Math.min(30,Number(progressDays)||0));
+  const stage = days<=0?-1 : days<7?0 : days<14?1 : days<22?2 : days<30?3 : 4;
+  const remaining = 30-days;
+  const titles = ['Your seed is planted.','A sprout is up.','Your plant is growing stronger.','A flower bud is forming.','You’re in full bloom.'];
+  const plant = document.getElementById('plantSvg');
+  plant.innerHTML = plantSVG(stage);
+  plant.setAttribute('aria-label',stage<0?'No plant yet: day 0 of 30':stage===0?'Your seed is planted: day '+days+' of 30':stage===4?'Your plant is in full bloom':'Your plant is growing: day '+days+' of 30');
+  document.getElementById('plantTitle').textContent = stage<0?'Ready to begin':stage===0?'Seed planted':titles[stage];
+  document.getElementById('plantCaption').textContent = stage<0?'Complete one focused day to plant the seed.':stage===0?remaining+' more '+(remaining===1?'day':'days')+' to full bloom.':remaining ? remaining+' consistent '+(remaining===1?'day':'days')+' to full bloom.' : 'Full bloom! Keep completing at least 80% of your tasks each day to maintain your streak and keep your flower blooming.';
+  document.getElementById('plantCaption').title = remaining ? remaining+' more consecutive successful days until full bloom.' : 'Complete at least 80% of your tasks each day to maintain your streak and keep your flower blooming.';
+  document.getElementById('plantProgressLabel').textContent = 'Day '+days+' of 30';
+  document.getElementById('plantProgressPercent').textContent = Math.round(days/30*100)+'%';
+  document.getElementById('plantProgressFill').style.width = (days/30*100)+'%';
+  const track = document.getElementById('plantProgressTrack');
+  track.setAttribute('aria-valuenow',String(days));
+  track.setAttribute('aria-valuetext','Day '+days+' of 30');
+}
+function calendarDaysInYear(year){
+  return new Date(year, 1, 29).getMonth() === 1 ? 366 : 365;
+}
+function renderYearStat(){
+  const yr = String(new Date().getFullYear());
+  const todayDs = todayStr();
+  let count = 0;
+  for(const ds in log){
+    if(ds.slice(0,4)===yr && ds<=todayDs && (log[ds]||[]).length>0) count++;
+  }
+  document.getElementById('yearStat').textContent = count;
+  document.getElementById('yearStatUnit').textContent = count===1 ? 'day' : 'days';
+}
+function renderYearProgress(){
+  const now = new Date();
+  const year = now.getFullYear();
+  const total = calendarDaysInYear(year);
+  const completed = Math.floor((Date.UTC(year, now.getMonth(), now.getDate()) - Date.UTC(year, 0, 1)) / 86400000) + 1;
+  const left = total - completed;
+  const completePct = Math.round(completed / total * 100);
+  document.getElementById('yearProgress').textContent =
+    `${completePct}% of the year complete · ${left} days left`;
+}
+
+function showCellTooltip(cell){
+  const tip = document.getElementById('cellTooltip');
+  tip.textContent = cell.dataset.tooltip;
+  tip.setAttribute('aria-hidden', 'false');
+  tip.classList.add('visible');
+  const cellRect = cell.getBoundingClientRect();
+  const tipRect = tip.getBoundingClientRect();
+  const margin = 8;
+  const maxLeft = Math.max(margin, window.innerWidth - tipRect.width - margin);
+  const left = Math.min(maxLeft, Math.max(margin, cellRect.left + (cellRect.width - tipRect.width) / 2));
+  let top = cellRect.top - tipRect.height - margin;
+  if(top < margin) top = cellRect.bottom + margin;
+  top = Math.min(Math.max(margin, top), Math.max(margin, window.innerHeight - tipRect.height - margin));
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+}
+function hideCellTooltip(){
+  const tip = document.getElementById('cellTooltip');
+  if(!tip) return;
+  tip.classList.remove('visible');
+  tip.setAttribute('aria-hidden', 'true');
+}
+function attachCellTooltip(cell, dateLabel, dayProgress){
+  cell.dataset.tooltip = `${dateLabel} — ${Math.round(dayProgress*100)}% complete`;
+  cell.removeAttribute('title');
+  cell.addEventListener('mouseenter', ()=>showCellTooltip(cell));
+  cell.addEventListener('mouseleave', hideCellTooltip);
+}
+window.addEventListener('scroll', hideCellTooltip, true);
+window.addEventListener('resize', hideCellTooltip);
+
+// ---- Year grid ----
+function renderYearGrid(){
+  const el = document.getElementById('yearGrid');
+  el.innerHTML = '';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const year = today.getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const daysInYear = calendarDaysInYear(year);
+  const todayDs = todayStr(today);
+
+  // Place each date directly in its weekday row and week column.
+  const startOffset = yearStart.getDay();
+  for(let idx = 0; idx < daysInYear; idx++){
+    const cellDate = new Date(year, 0, idx + 1);
+    const ds = todayStr(cellDate);
+    const future = cellDate > today;
+    const dayProgress = future ? 0 : pct(ds);
+    const cell = document.createElement('div');
+    cell.dataset.date = ds;
+    cell.className = 'cell ' + levelClass(dayProgress) + (ds===todayDs?' today':'');
+    const calendarPosition = startOffset + idx;
+    cell.style.gridColumn = String(Math.floor(calendarPosition / 7) + 1);
+    cell.style.gridRow = String(calendarPosition % 7 + 1);
+    attachCellTooltip(cell, cellDate.toDateString(), dayProgress);
+    if(future) cell.style.opacity = '0.35';
+    if(firstGridRender) cell.style.animation = `cellIn .3s ease ${Math.min(idx*1.5,350)}ms both`;
+    cell.onclick = ()=>openDay(cell.dataset.date);
+    el.appendChild(cell);
+  }
+}
+
+// ---- Month grid ----
+let viewMonth = new Date().getMonth();
+let viewYear = new Date().getFullYear();
+let firstGridRender = true;
+const MONTH_NAMES = ['January','February','March','April','May','June','July',
+  'August','September','October','November','December'];
+
+function renderMonthGrid(){
+  const el = document.getElementById('monthGrid');
+  el.innerHTML = '';
+  document.getElementById('monthLabel').textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
+  const first = new Date(viewYear, viewMonth, 1);
+  const startPad = first.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const todayDs = todayStr();
+  const now = new Date();
+
+  for(let i=0;i<startPad;i++){ el.appendChild(document.createElement('div')); }
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(viewYear, viewMonth, day);
+    const ds = todayStr(d);
+    const cell = document.createElement('div');
+    const future = d > now;
+    const cls = future ? '' : levelClass(pct(ds));
+    cell.className = 'cell month ' + cls + (ds===todayDs?' today':'');
+    attachCellTooltip(cell, d.toDateString(), pct(ds));
+    if(firstGridRender) cell.style.animation = `cellIn .3s ease ${Math.min((day-1)*8,350)}ms both`;
+    if(!future) cell.onclick = ()=>openDay(ds);
+    else cell.style.opacity = '0.35';
+    el.appendChild(cell);
+  }
+  const atCurrent = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+  document.getElementById('nextMonth').disabled = atCurrent;
+  document.getElementById('jumpToday').style.display = atCurrent ? 'none' : 'inline';
+}
+document.getElementById('jumpToday').onclick = ()=>{
+  const n = new Date();
+  viewMonth = n.getMonth(); viewYear = n.getFullYear();
+  renderMonthGrid();
+};
+document.getElementById('prevMonth').onclick = ()=>{
+  viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; }
+  renderMonthGrid();
+};
+document.getElementById('nextMonth').onclick = ()=>{
+  viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; }
+  renderMonthGrid();
+};
+
+function renderGrids(){
+  renderYearGrid();
+  renderMonthGrid();
+  firstGridRender = false;
+}
+
+// ---- Day detail modal ----
+function openDay(ds){
+  hideCellTooltip();
+  const [year, month, day] = ds.split('-').map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  document.getElementById('dayTitle').textContent = dateObj.toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  });
+  const p = pct(ds);
+  document.getElementById('dayPct').textContent = Math.round(p*100) + '% complete';
+  document.getElementById('dayPanel').classList.add('open');
+}
+document.getElementById('closeDay').onclick = ()=>{
+  document.getElementById('dayPanel').classList.remove('open');
+};
+document.getElementById('dayPanel').addEventListener('click', e=>{
+  if(e.target.id==='dayPanel') e.currentTarget.classList.remove('open');
+});
+document.getElementById('confirmPanel').addEventListener('click', e=>{
+  if(e.target.id==='confirmPanel'){ e.currentTarget.classList.remove('open'); confirmCallback = null; }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    document.getElementById('dayPanel').classList.remove('open');
+    document.getElementById('confirmPanel').classList.remove('open');
+    confirmCallback = null;
+  }
+});
+document.querySelector('.hero').addEventListener('click', ()=>{
+  document.getElementById('todayList').scrollIntoView({behavior:'smooth', block:'center'});
+});
+
+
+
+// ---- View toggle ----
+function showYearView(){
+  document.getElementById('btnYear').classList.add('active');
+  document.getElementById('btnMonth').classList.remove('active');
+  document.getElementById('yearGrid').style.display = 'grid';
+  document.getElementById('monthWrap').style.display = 'none';
+  localStorage.setItem('field_view', 'year');
+}
+function showMonthView(){
+  document.getElementById('btnMonth').classList.add('active');
+  document.getElementById('btnYear').classList.remove('active');
+  document.getElementById('monthWrap').style.display = 'block';
+  document.getElementById('yearGrid').style.display = 'none';
+  localStorage.setItem('field_view', 'month');
+}
+document.getElementById('btnYear').onclick = showYearView;
+document.getElementById('btnMonth').onclick = showMonthView;
+if(localStorage.getItem('field_view')==='month') showMonthView();
+
+// ---- New Year reset prompt ----
+function checkNewYearReset(){
+  const now = new Date();
+  const year = now.getFullYear();
+  const flagKey = 'field_ny_' + year;
+  if(now.getMonth()===0 && now.getDate()===1 && !localStorage.getItem(flagKey)){
+    document.getElementById('resetBanner').style.display = 'block';
+  }
+}
+// ---- Shared confirm modal ----
+let confirmCallback = null;
+function showConfirm(msg, cb){
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirmPanel').classList.add('open');
+}
+document.getElementById('confirmYes').onclick = ()=>{
+  document.getElementById('confirmPanel').classList.remove('open');
+  if(confirmCallback) confirmCallback();
+  confirmCallback = null;
+};
+document.getElementById('confirmCancel').onclick = ()=>{
+  document.getElementById('confirmPanel').classList.remove('open');
+  confirmCallback = null;
+};
+
+document.getElementById('resetYes').onclick = ()=>{
+  const year = new Date().getFullYear();
+  showConfirm('Reset your daily history for the new year? Your task list stays — every logged day will be cleared.', ()=>{
+    log = {};
+    save(LS_LOG, log);
+    localStorage.setItem('field_ny_' + year, 'reset');
+    document.getElementById('resetBanner').style.display = 'none';
+    renderAll();
+  });
+};
+document.getElementById('resetNo').onclick = ()=>{
+  const year = new Date().getFullYear();
+  localStorage.setItem('field_ny_' + year, 'declined');
+  document.getElementById('resetBanner').style.display = 'none';
+};
+document.getElementById('manualReset').onclick = ()=>{
+  showConfirm('Reset your daily history? Your task list stays — every logged day will be cleared.', ()=>{
+    log = {};
+    save(LS_LOG, log);
+    renderAll();
+  });
+};
+
+
+
+// ---- Pomodoro focus timer ----
+const LS_POMODORO='field_pomodoro';
+const DEFAULT_FOCUS_MINUTES=25, DEFAULT_BREAK_MINUTES=5;
+const FOCUS_MS=DEFAULT_FOCUS_MINUTES*60*1000, BREAK_MS=DEFAULT_BREAK_MINUTES*60*1000;
+function clampMinutes(value,fallback,max){
+  const n=Number(value);
+  return Number.isInteger(n)?Math.min(max,Math.max(1,n)):fallback;
+}
+function freshPomodoro(focusMinutes=DEFAULT_FOCUS_MINUTES,breakMinutes=DEFAULT_BREAK_MINUTES){
+  const focusMs=focusMinutes*60*1000;
+  return {day:todayStr(),mode:'focus',focusMinutes,breakMinutes,sessionLengthMs:focusMs,remainingMs:focusMs,running:false,startedAt:null,focusedSeconds:0,sessions:0,status:''};
+}
+const savedPomodoro=load(LS_POMODORO,null);
+const savedFocus=clampMinutes(savedPomodoro?.focusMinutes,DEFAULT_FOCUS_MINUTES,180);
+const savedBreak=clampMinutes(savedPomodoro?.breakMinutes,DEFAULT_BREAK_MINUTES,60);
+let pomodoro=savedPomodoro?.day===todayStr()?{...freshPomodoro(savedFocus,savedBreak),...savedPomodoro}:freshPomodoro(savedFocus,savedBreak);
+pomodoro.focusMinutes=savedFocus;
+pomodoro.breakMinutes=savedBreak;
+if(!Number.isFinite(pomodoro.sessionLengthMs) || pomodoro.sessionLengthMs<=0){
+  pomodoro.sessionLengthMs=(pomodoro.mode==='break'?savedBreak:savedFocus)*60*1000;
+  pomodoro.remainingMs=pomodoro.sessionLengthMs;
+}
+function savePomodoro(){ save(LS_POMODORO,pomodoro); }
+function configuredDuration(mode){ return (mode==='focus'?pomodoro.focusMinutes:pomodoro.breakMinutes)*60*1000; }
+function pomodoroRemaining(now=Date.now()){
+  return pomodoro.running?Math.max(0,pomodoro.remainingMs-(now-pomodoro.startedAt)):pomodoro.remainingMs;
+}
+function focusedToday(now=Date.now()){
+  const runningFocus=pomodoro.running && pomodoro.mode==='focus'
+    ? Math.min(pomodoro.remainingMs,now-pomodoro.startedAt)/1000 : 0;
+  return pomodoro.focusedSeconds+Math.max(0,runningFocus);
+}
+function formatFocused(seconds){
+  seconds=Math.floor(seconds);
+  const minutes=Math.floor(seconds/60), remainder=seconds%60;
+  return minutes ? `${minutes}m${remainder?` ${remainder}s`:''}` : (remainder?`${remainder}s`:'0m');
+}
+function renderPomodoro(now=Date.now()){
+  if(pomodoro.day!==todayStr()) pomodoro=freshPomodoro(pomodoro.focusMinutes,pomodoro.breakMinutes);
+  let remaining=pomodoroRemaining(now);
+  if(pomodoro.running && remaining<=0){
+    if(pomodoro.mode==='focus'){
+      pomodoro.focusedSeconds+=Math.ceil(pomodoro.remainingMs/1000);
+      pomodoro.sessions++;
+      pomodoro.mode='break'; pomodoro.sessionLengthMs=configuredDuration('break'); pomodoro.remainingMs=pomodoro.sessionLengthMs;
+      pomodoro.status='Focus session complete. Take a break.';
+    }else{
+      pomodoro.mode='focus'; pomodoro.sessionLengthMs=configuredDuration('focus'); pomodoro.remainingMs=pomodoro.sessionLengthMs;
+      pomodoro.status='Break complete. Ready for another focus session.';
+    }
+    pomodoro.running=false; pomodoro.startedAt=null; savePomodoro();
+    remaining=pomodoro.remainingMs;
+  }
+  const seconds=Math.ceil(remaining/1000);
+  document.getElementById('pomoClock').textContent=`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
+  document.getElementById('pomoToggle').textContent=pomodoro.running?'Pause':(pomodoro.mode==='focus'?'Start focus':'Start break');
+  document.getElementById('pomoToday').textContent=formatFocused(focusedToday(now));
+  document.getElementById('pomoProgress').style.width=`${Math.min(100,Math.max(0,(1-remaining/pomodoro.sessionLengthMs)*100))}%`;
+  document.getElementById('pomoFocusLength').textContent=`${pomodoro.focusMinutes}m`;
+  document.getElementById('pomoBreakLength').textContent=`${pomodoro.breakMinutes}m`;
+  const focusInput=document.getElementById('pomoFocusMinutes');
+  const breakInput=document.getElementById('pomoBreakMinutes');
+  if(document.activeElement!==focusInput) focusInput.value=pomodoro.focusMinutes;
+  if(document.activeElement!==breakInput) breakInput.value=pomodoro.breakMinutes;
+  document.querySelectorAll('.pomoModeChoice').forEach(button=>{
+    const active=button.dataset.mode===pomodoro.mode;
+    button.classList.toggle('active',active); button.setAttribute('aria-pressed',String(active));
+  });
+  document.getElementById('pomoStatus').textContent=pomodoro.status;
+}
+function pausePomodoro(){
+  if(!pomodoro.running) return;
+  const elapsed=Math.min(pomodoro.remainingMs,Date.now()-pomodoro.startedAt);
+  const elapsedSeconds=Math.floor(Math.max(0,elapsed)/1000);
+  if(pomodoro.mode==='focus') pomodoro.focusedSeconds+=elapsedSeconds;
+  pomodoro.remainingMs=Math.max(0,pomodoro.remainingMs-elapsedSeconds*1000);
+  pomodoro.running=false; pomodoro.startedAt=null; savePomodoro();
+}
+function selectPomodoroMode(mode){
+  if(mode!=='focus' && mode!=='break') return;
+  pausePomodoro();
+  pomodoro.mode=mode; pomodoro.sessionLengthMs=configuredDuration(mode); pomodoro.remainingMs=pomodoro.sessionLengthMs; pomodoro.status='';
+  savePomodoro(); renderPomodoro();
+}
+document.querySelectorAll('.pomoModeChoice').forEach(button=>button.addEventListener('click',()=>selectPomodoroMode(button.dataset.mode)));
+document.getElementById('pomoToggle').onclick=()=>{
+  if(pomodoro.running) pausePomodoro();
+  else { pomodoro.running=true; pomodoro.startedAt=Date.now(); pomodoro.status=''; savePomodoro(); }
+  renderPomodoro();
+};
+document.getElementById('pomoReset').onclick=()=>{
+  pausePomodoro();
+  pomodoro.mode='focus'; pomodoro.sessionLengthMs=configuredDuration('focus'); pomodoro.remainingMs=pomodoro.sessionLengthMs; pomodoro.startedAt=null; pomodoro.status='Timer reset.';
+  savePomodoro(); renderPomodoro();
+};
+document.getElementById('pomoFocusReset').onclick=()=>showConfirm('Reset today’s focused time?',()=>{
+  const resumeFocus=pomodoro.running && pomodoro.mode==='focus';
+  if(resumeFocus) pausePomodoro();
+  pomodoro.focusedSeconds=0;
+  if(resumeFocus){ pomodoro.running=true; pomodoro.startedAt=Date.now(); }
+  pomodoro.status=''; savePomodoro(); renderPomodoro();
+});
+function updatePomodoroDuration(field, input, fallback, max){
+  const value=clampMinutes(input.value,fallback,max);
+  input.value=value;
+  const wasAtStart=!pomodoro.running && pomodoro.remainingMs>=pomodoro.sessionLengthMs;
+  pomodoro[field]=value;
+  if(wasAtStart){pomodoro.sessionLengthMs=configuredDuration(pomodoro.mode);pomodoro.remainingMs=pomodoro.sessionLengthMs;}
+  pomodoro.status=''; savePomodoro(); renderPomodoro();
+}
+document.getElementById('pomoFocusMinutes').addEventListener('change',e=>updatePomodoroDuration('focusMinutes',e.target,DEFAULT_FOCUS_MINUTES,180));
+document.getElementById('pomoBreakMinutes').addEventListener('change',e=>updatePomodoroDuration('breakMinutes',e.target,DEFAULT_BREAK_MINUTES,60));
+renderPomodoro();
+setInterval(()=>renderPomodoro(),1000);
+
+function renderAll(){
+  renderToday();
+  renderTomorrow();
+  renderGrids();
+  renderStreak();
+  renderYearStat();
+  renderYearProgress();
+  renderHero();
+  renderWeekStrip();
+}
+let renderedDate = todayStr();
+const savedActiveDate = localStorage.getItem(LS_ACTIVE_DATE);
+if(savedActiveDate && savedActiveDate !== renderedDate){
+  setSelectedForDay(tomorrowStr(), []);
+}
+localStorage.setItem(LS_ACTIVE_DATE, renderedDate);
+renderAll();
+checkNewYearReset();
+
+function refreshForDateChange(){
+  const currentDate = todayStr();
+  if(currentDate === renderedDate) return;
+  const [year, month, day] = renderedDate.split('-').map(Number);
+  const previousDate = new Date(year, month - 1, day);
+  renderedDate = currentDate;
+  localStorage.setItem(LS_ACTIVE_DATE, renderedDate);
+  // The old tomorrow plan is now today's date-keyed selection; start the new tomorrow empty.
+  setSelectedForDay(tomorrowStr(), []);
+  const now = new Date();
+  if(viewYear === previousDate.getFullYear() && viewMonth === previousDate.getMonth()){
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth();
+  }
+  renderAll();
+  checkNewYearReset();
+}
+function scheduleDateChangeCheck(){
+  const now = new Date();
+  const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  setTimeout(()=>{
+    refreshForDateChange();
+    scheduleDateChangeCheck();
+  }, Math.max(250, nextMidnight.getTime() - now.getTime() + 50));
+}
+scheduleDateChangeCheck();
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden) refreshForDateChange();
+});
+window.addEventListener('focus', refreshForDateChange);
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
+}
+</script>
+</body>
+</html>
