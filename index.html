@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#51a94e">
+<meta name="theme-color" content="#3b82f6">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -11,7 +11,7 @@
 <script>
 try {
   const saved = JSON.parse(localStorage.getItem('field_appearance') || 'null');
-  const mode = saved && saved.mode ? saved.mode : localStorage.getItem('field_theme');
+  const mode = saved && saved.mode ? saved.mode : (localStorage.getItem('field_theme') || (window.matchMedia('(max-width: 760px)').matches ? 'dark' : 'light'));
   if (mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
 } catch (e) {}
 </script>
@@ -19,10 +19,10 @@ try {
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f7f6f1; --text:#25241f; --accent:#51a94e;
+  --bg:#f7f6f1; --text:#25241f; --accent:#3b82f6;
   --surface:#f1f0e9; --surface2:#eae9e1;
   --muted:#858378; --line:#e3e0d5;
-  --l0:#ecebe3; --l1:#cde7bc; --l2:#a6d68c; --l3:#6cbd53; --l4:#279a63;
+  --l0:#ecebe3; --l1:#dbe6ff; --l2:#b3caff; --l3:#7097ff; --l4:#3b82f6;
   --danger:#c0685f; --onAccent:#06150f; --shadow:rgba(34,30,20,.18);
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
@@ -319,21 +319,21 @@ summary{font-weight:600;font-size:.95rem;cursor:pointer;}
     </div>
   </div>
   <section class="pomoCard" aria-label="Pomodoro timer">
-    <div class="pomoHead"><span class="pomoTitle">Focus timer</span><span class="pomoToday"><strong id="pomoToday">0m</strong> focused today <button id="pomoFocusReset" type="button" title="Reset today’s focus time" aria-label="Reset today’s focus time">↻</button></span></div>
+    <div class="pomoHead"><span class="pomoTitle">Pomodoro</span><span class="pomoToday"><strong id="pomoToday">0m</strong> focused today <button id="pomoFocusReset" type="button" title="Reset today’s Pomodoro time" aria-label="Reset today’s Pomodoro time">↻</button></span></div>
     <div class="pomoModes" role="group" aria-label="Timer mode">
-      <button class="pomoModeChoice active" id="pomoFocusMode" type="button" data-mode="focus" aria-pressed="true">Focus <b id="pomoFocusLength">25m</b></button>
-      <button class="pomoModeChoice" id="pomoBreakMode" type="button" data-mode="break" aria-pressed="false">Break <b id="pomoBreakLength">5m</b></button>
+      <button class="pomoModeChoice active" id="pomoFocusMode" type="button" data-mode="focus" aria-pressed="true">Focus <b id="pomoFocusLength">50m</b></button>
+      <button class="pomoModeChoice" id="pomoBreakMode" type="button" data-mode="break" aria-pressed="false">Break <b id="pomoBreakLength">10m</b></button>
     </div>
     <div class="pomoRow">
-      <div class="pomoClock" id="pomoClock">25:00</div>
+      <div class="pomoClock" id="pomoClock">50:00</div>
       <div class="pomoButtons"><button id="pomoToggle" type="button">Start focus</button><button id="pomoReset" type="button">Reset</button></div>
     </div>
     <div class="pomoTrack" aria-hidden="true"><span id="pomoProgress"></span></div>
     <details class="pomoSettings">
       <summary>Set times</summary>
       <div class="pomoFields">
-        <label for="pomoFocusMinutes">Focus <input id="pomoFocusMinutes" type="number" min="1" max="180" step="1" value="25"> min</label>
-        <label for="pomoBreakMinutes">Break <input id="pomoBreakMinutes" type="number" min="1" max="60" step="1" value="5"> min</label>
+        <label for="pomoFocusMinutes">Focus <input id="pomoFocusMinutes" type="number" min="1" max="180" step="1" value="50"> min</label>
+        <label for="pomoBreakMinutes">Break <input id="pomoBreakMinutes" type="number" min="1" max="60" step="1" value="10"> min</label>
       </div>
       <p class="pomoHint">Changes apply next session.</p>
     </details>
@@ -514,8 +514,8 @@ const ACCENT_THEMES = {
 const BASE_COLORS={light:{background:'#f7f6f1',foreground:'#25241f'},dark:{background:'#171816',foreground:'#efeee8'}};
 let appearanceSaved=load(APPEARANCE_KEY,{});
 if(!appearanceSaved || typeof appearanceSaved!=='object' || Array.isArray(appearanceSaved)) appearanceSaved={};
-let selectedMode=['system','light','dark'].includes(appearanceSaved.mode) ? appearanceSaved.mode : (localStorage.getItem('field_theme')==='dark'?'dark':'light');
-let activeAccent=ACCENT_THEMES[appearanceSaved.accent] ? appearanceSaved.accent : (ACCENT_THEMES[appearanceSaved.preset] ? appearanceSaved.preset : 'default');
+let selectedMode=['system','light','dark'].includes(appearanceSaved.mode) ? appearanceSaved.mode : (localStorage.getItem('field_theme') || (window.matchMedia && window.matchMedia('(max-width: 760px)').matches ? 'dark' : 'light'));
+let activeAccent=ACCENT_THEMES[appearanceSaved.accent] ? appearanceSaved.accent : (ACCENT_THEMES[appearanceSaved.preset] ? appearanceSaved.preset : 'blue');
 let appearanceColors={};
 const savedColors=appearanceSaved.colors || appearanceSaved.customColors || {};
 for(const mode of ['light','dark']){
@@ -683,7 +683,7 @@ document.querySelectorAll('[data-color-sv]').forEach(area=>{
 const appearanceButton=document.getElementById('appearanceButton'),appearancePanel=document.getElementById('appearancePanel');
 appearanceButton.addEventListener('click',()=>{const opening=appearancePanel.hidden;appearancePanel.hidden=!opening;appearanceButton.setAttribute('aria-expanded',String(opening));if(!opening){closeAccentMenu();closeColorPickers();}});
 document.getElementById('appearanceReset').addEventListener('click',()=>{
-  selectedMode='light';activeAccent='default';appearanceColors={};saveAppearance();renderAppearance();closeAppearance();
+  selectedMode=(window.matchMedia && window.matchMedia('(max-width: 760px)').matches)?'dark':'light';activeAccent='blue';appearanceColors={};saveAppearance();renderAppearance();closeAppearance();
 });
 document.addEventListener('click',event=>{
   if(!appearancePanel.hidden && !appearancePanel.contains(event.target) && !appearanceButton.contains(event.target)){closeAppearance();return;}
@@ -1270,9 +1270,9 @@ document.getElementById('manualReset').onclick = ()=>{
 
 
 
-// ---- Pomodoro focus timer ----
+// ---- Pomodoro Pomodoro ----
 const LS_POMODORO='field_pomodoro';
-const DEFAULT_FOCUS_MINUTES=25, DEFAULT_BREAK_MINUTES=5;
+const DEFAULT_FOCUS_MINUTES=50, DEFAULT_BREAK_MINUTES=10;
 const FOCUS_MS=DEFAULT_FOCUS_MINUTES*60*1000, BREAK_MS=DEFAULT_BREAK_MINUTES*60*1000;
 function clampMinutes(value,fallback,max){
   const n=Number(value);
