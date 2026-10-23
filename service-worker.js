@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ascend-app-v4';
+const CACHE_NAME = 'ascend-app-v5';
 const APP_FILES = [
   './',
   './index.html',
@@ -23,6 +23,16 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).then(response => {
+        if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+        return response;
+      }).catch(() => caches.match(request).then(cached => cached || caches.match('./index.html')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then(cached => cached || fetch(request).then(response => {

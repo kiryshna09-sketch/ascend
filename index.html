@@ -11,7 +11,7 @@
 <script>
 try {
   const saved = JSON.parse(localStorage.getItem('field_appearance') || 'null');
-  const mode = saved && saved.mode ? saved.mode : (localStorage.getItem('field_theme') || (window.matchMedia('(max-width: 760px)').matches ? 'dark' : 'light'));
+  const mode = saved && saved.mode ? saved.mode : (localStorage.getItem('field_theme') || 'light');
   if (mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
 } catch (e) {}
 </script>
@@ -357,7 +357,7 @@ summary{font-weight:600;font-size:.95rem;cursor:pointer;}
     <div class="streakItem"><span class="streakLabel">Current streak</span><span class="streakValue"><b id="streakVal">0</b> <span id="streakUnit">days</span></span></div>
     <div class="streakItem"><span class="streakLabel">Best streak</span><span class="streakValue"><b id="bestStreak">0</b> <span id="bestStreakUnit">days</span><span id="bestStreakBadge" aria-hidden="true"></span></span></div>
     <div class="streakItem"><span class="streakLabel">Days worked this year</span><span class="streakValue"><b id="yearStat">0</b> <span id="yearStatUnit">days</span></span></div>
-    <p class="streakHint">Any completed task counts as a workday. Streaks and plant growth need at least 80% of that day’s tasks completed.</p>
+    <p class="streakHint">A streak day needs at least 80% of that day’s selected tasks done (for example, 4 of 5). Today’s unfinished work keeps yesterday’s streak active until midnight. A full missed day resets it. “Days worked” only needs one completed task.</p>
   </div>
 </div>
 
@@ -514,7 +514,7 @@ const ACCENT_THEMES = {
 const BASE_COLORS={light:{background:'#f7f6f1',foreground:'#25241f'},dark:{background:'#171816',foreground:'#efeee8'}};
 let appearanceSaved=load(APPEARANCE_KEY,{});
 if(!appearanceSaved || typeof appearanceSaved!=='object' || Array.isArray(appearanceSaved)) appearanceSaved={};
-const defaultModeForViewport=()=>window.matchMedia && window.matchMedia('(max-width: 760px)').matches ? 'dark' : 'light';
+const defaultModeForViewport=()=>'light';
 let selectedMode=['system','light','dark'].includes(appearanceSaved.mode) ? appearanceSaved.mode : (localStorage.getItem('field_theme') || defaultModeForViewport());
 let activeAccent=ACCENT_THEMES[appearanceSaved.accent] ? appearanceSaved.accent : (ACCENT_THEMES[appearanceSaved.preset] ? appearanceSaved.preset : 'blue');
 let appearanceColors={};
@@ -1284,19 +1284,46 @@ function freshPomodoro(focusMinutes=DEFAULT_FOCUS_MINUTES,breakMinutes=DEFAULT_B
   return {day:todayStr(),mode:'focus',focusMinutes,breakMinutes,sessionLengthMs:focusMs,remainingMs:focusMs,running:false,startedAt:null,focusedSeconds:0,sessions:0,status:''};
 }
 const savedPomodoro=load(LS_POMODORO,null);
-// Upgrade an untouched old 25/5 timer to the requested 50/10 defaults.
-const oldDefaultMode=savedPomodoro?.mode==='break'?'break':'focus';
-const oldDefaultMs=(oldDefaultMode==='break'?5:25)*60*1000;
-const timerAtOldDefaultStart=savedPomodoro?.focusMinutes===25 && savedPomodoro?.breakMinutes===5 &&
-  !savedPomodoro.running && savedPomodoro.sessionLengthMs===oldDefaultMs && savedPomodoro.remainingMs===oldDefaultMs;
-const savedFocus=timerAtOldDefaultStart ? DEFAULT_FOCUS_MINUTES : clampMinutes(savedPomodoro?.focusMinutes,DEFAULT_FOCUS_MINUTES,180);
-const savedBreak=timerAtOldDefaultStart ? DEFAULT_BREAK_MINUTES : clampMinutes(savedPomodoro?.breakMinutes,DEFAULT_BREAK_MINUTES,60);
+// Move legacy timer defaults to 50/10, including saved or running sessions.
+const legacyTimerDefaults=!!savedPomodoro && (
+  (savedPomodoro.focusMinutes===25 && [1,5].includes(savedPomodoro.breakMinutes)) ||
+  (savedPomodoro.focusMinutes===50 && savedPomodoro.breakMinutes===1)
+);
+const savedFocus=legacyTimerDefaults ? DEFAULT_FOCUS_MINUTES : clampMinutes(savedPomodoro?.focusMinutes,DEFAULT_FOCUS_MINUTES,180);
+const savedBreak=legacyTimerDefaults ? DEFAULT_BREAK_MINUTES : clampMinutes(savedPomodoro?.breakMinutes,DEFAULT_BREAK_MINUTES,60);
 let pomodoro=savedPomodoro?.day===todayStr()?{...freshPomodoro(savedFocus,savedBreak),...savedPomodoro}:freshPomodoro(savedFocus,savedBreak);
 pomodoro.focusMinutes=savedFocus;
 pomodoro.breakMinutes=savedBreak;
-if(timerAtOldDefaultStart){
-  pomodoro.sessionLengthMs=(pomodoro.mode==='break'?savedBreak:savedFocus)*60*1000;
-  pomodoro.remainingMs=pomodoro.sessionLengthMs;
+if(legacyTimerDefaults && savedPomodoro?.day===todayStr()){
+  const oldMode=savedPomodoro.mode==='break'?'break':'focus';
+  const oldLength=Number(savedPomodoro.sessionLengthMs) || (oldMode==='break'?savedPomodoro.breakMinutes:savedPomodoro.focusMinutes)*60*1000;
+  const elapsedWhileOpen=savedPomodoro.running ? Math.max(0,Date.now()-(Number(savedPomodoro.startedAt)||Date.now())) : 0;
+  const oldRemaining=Math.max(0,Number(savedPomodoro.remainingMs||oldLength)-elapsedWhileOpen);
+  const newLength=(oldMode==='break'?savedBreak:savedFocus)*60*1000;
+  if(savedPomodoro.running && oldRemaining===0){
+    if(oldMode==='focus'){
+      pomodoro.focusedSeconds=(Number(savedPomodoro.focusedSeconds)||0)+Math.ceil(Number(savedPomodoro.remainingMs||0)/1000);
+      pomodoro.sessions=(Number(savedPomodoro.sessions)||0)+1;
+      pomodoro.mode='break';
+      pomodoro.sessionLengthMs=savedBreak*60*1000;
+      pomodoro.remainingMs=pomodoro.sessionLengthMs;
+      pomodoro.status='Focus session complete. Take a break.';
+    }else{
+      pomodoro.mode='focus';
+      pomodoro.sessionLengthMs=savedFocus*60*1000;
+      pomodoro.remainingMs=pomodoro.sessionLengthMs;
+      pomodoro.status='Break complete. Ready for another focus session.';
+    }
+    pomodoro.running=false;
+    pomodoro.startedAt=null;
+  }else{
+    const elapsed=Math.max(0,oldLength-oldRemaining);
+    pomodoro.mode=oldMode;
+    pomodoro.sessionLengthMs=newLength;
+    pomodoro.remainingMs=Math.max(0,newLength-elapsed);
+    if(pomodoro.running) pomodoro.startedAt=Date.now();
+  }
+  save(LS_POMODORO,pomodoro);
 }
 if(!Number.isFinite(pomodoro.sessionLengthMs) || pomodoro.sessionLengthMs<=0){
   pomodoro.sessionLengthMs=(pomodoro.mode==='break'?savedBreak:savedFocus)*60*1000;
@@ -1445,7 +1472,20 @@ document.addEventListener('visibilitychange', ()=>{
 });
 window.addEventListener('focus', refreshForDateChange);
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
+  const alreadyControlled=!!navigator.serviceWorker.controller;
+  if(alreadyControlled){
+    let refreshedForUpdate=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(refreshedForUpdate) return;
+      refreshedForUpdate=true;
+      location.reload();
+    });
+  }
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'})
+      .then(registration=>registration.update().catch(()=>{}))
+      .catch(()=>{});
+  });
 }
 </script>
 </body>
