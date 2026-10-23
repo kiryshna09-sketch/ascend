@@ -714,13 +714,21 @@ if(window.matchMedia){
   else if(systemMode.addListener) systemMode.addListener(onSystemModeChange);
 }
 
-let tasks = load(LS_TASKS, [
+const starterTasks = [
   {id:'t1', name:'1 hr deep work'},
   {id:'t2', name:'Exercise'},
   {id:'t3', name:'No social media before noon'}
-]);
+];
 let log = load(LS_LOG, {});
 let selections = load(LS_SELECT, {});
+const savedTasks = load(LS_TASKS, null);
+const starterIds = new Set(starterTasks.map(task=>task.id));
+const hasLegacyStarterProgress = [log, selections].some(records=>
+  Object.values(records || {}).some(ids=>Array.isArray(ids) && ids.some(id=>starterIds.has(id)))
+);
+// New visitors start with an empty list. Keep the old starter list only for
+// returning visitors whose saved history still refers to those starter tasks.
+let tasks = Array.isArray(savedTasks) ? savedTasks : (hasLegacyStarterProgress ? starterTasks : []);
 function todayStr(d=new Date()){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
