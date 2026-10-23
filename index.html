@@ -514,7 +514,8 @@ const ACCENT_THEMES = {
 const BASE_COLORS={light:{background:'#f7f6f1',foreground:'#25241f'},dark:{background:'#171816',foreground:'#efeee8'}};
 let appearanceSaved=load(APPEARANCE_KEY,{});
 if(!appearanceSaved || typeof appearanceSaved!=='object' || Array.isArray(appearanceSaved)) appearanceSaved={};
-let selectedMode=['system','light','dark'].includes(appearanceSaved.mode) ? appearanceSaved.mode : (localStorage.getItem('field_theme') || (window.matchMedia && window.matchMedia('(max-width: 760px)').matches ? 'dark' : 'light'));
+const defaultModeForViewport=()=>window.matchMedia && window.matchMedia('(max-width: 760px)').matches ? 'dark' : 'light';
+let selectedMode=['system','light','dark'].includes(appearanceSaved.mode) ? appearanceSaved.mode : (localStorage.getItem('field_theme') || defaultModeForViewport());
 let activeAccent=ACCENT_THEMES[appearanceSaved.accent] ? appearanceSaved.accent : (ACCENT_THEMES[appearanceSaved.preset] ? appearanceSaved.preset : 'blue');
 let appearanceColors={};
 const savedColors=appearanceSaved.colors || appearanceSaved.customColors || {};
@@ -683,7 +684,7 @@ document.querySelectorAll('[data-color-sv]').forEach(area=>{
 const appearanceButton=document.getElementById('appearanceButton'),appearancePanel=document.getElementById('appearancePanel');
 appearanceButton.addEventListener('click',()=>{const opening=appearancePanel.hidden;appearancePanel.hidden=!opening;appearanceButton.setAttribute('aria-expanded',String(opening));if(!opening){closeAccentMenu();closeColorPickers();}});
 document.getElementById('appearanceReset').addEventListener('click',()=>{
-  selectedMode=(window.matchMedia && window.matchMedia('(max-width: 760px)').matches)?'dark':'light';activeAccent='blue';appearanceColors={};saveAppearance();renderAppearance();closeAppearance();
+  selectedMode=defaultModeForViewport();activeAccent='blue';appearanceColors={};saveAppearance();renderAppearance();closeAppearance();
 });
 document.addEventListener('click',event=>{
   if(!appearancePanel.hidden && !appearancePanel.contains(event.target) && !appearanceButton.contains(event.target)){closeAppearance();return;}
@@ -1283,11 +1284,20 @@ function freshPomodoro(focusMinutes=DEFAULT_FOCUS_MINUTES,breakMinutes=DEFAULT_B
   return {day:todayStr(),mode:'focus',focusMinutes,breakMinutes,sessionLengthMs:focusMs,remainingMs:focusMs,running:false,startedAt:null,focusedSeconds:0,sessions:0,status:''};
 }
 const savedPomodoro=load(LS_POMODORO,null);
-const savedFocus=clampMinutes(savedPomodoro?.focusMinutes,DEFAULT_FOCUS_MINUTES,180);
-const savedBreak=clampMinutes(savedPomodoro?.breakMinutes,DEFAULT_BREAK_MINUTES,60);
+// Upgrade an untouched old 25/5 timer to the requested 50/10 defaults.
+const oldDefaultMode=savedPomodoro?.mode==='break'?'break':'focus';
+const oldDefaultMs=(oldDefaultMode==='break'?5:25)*60*1000;
+const timerAtOldDefaultStart=savedPomodoro?.focusMinutes===25 && savedPomodoro?.breakMinutes===5 &&
+  !savedPomodoro.running && savedPomodoro.sessionLengthMs===oldDefaultMs && savedPomodoro.remainingMs===oldDefaultMs;
+const savedFocus=timerAtOldDefaultStart ? DEFAULT_FOCUS_MINUTES : clampMinutes(savedPomodoro?.focusMinutes,DEFAULT_FOCUS_MINUTES,180);
+const savedBreak=timerAtOldDefaultStart ? DEFAULT_BREAK_MINUTES : clampMinutes(savedPomodoro?.breakMinutes,DEFAULT_BREAK_MINUTES,60);
 let pomodoro=savedPomodoro?.day===todayStr()?{...freshPomodoro(savedFocus,savedBreak),...savedPomodoro}:freshPomodoro(savedFocus,savedBreak);
 pomodoro.focusMinutes=savedFocus;
 pomodoro.breakMinutes=savedBreak;
+if(timerAtOldDefaultStart){
+  pomodoro.sessionLengthMs=(pomodoro.mode==='break'?savedBreak:savedFocus)*60*1000;
+  pomodoro.remainingMs=pomodoro.sessionLengthMs;
+}
 if(!Number.isFinite(pomodoro.sessionLengthMs) || pomodoro.sessionLengthMs<=0){
   pomodoro.sessionLengthMs=(pomodoro.mode==='break'?savedBreak:savedFocus)*60*1000;
   pomodoro.remainingMs=pomodoro.sessionLengthMs;
