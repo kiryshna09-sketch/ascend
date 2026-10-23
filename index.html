@@ -221,16 +221,6 @@ summary{font-weight:600;font-size:.95rem;cursor:pointer;}
 .addRow button{background:var(--l3);color:var(--onAccent);border:0;border-radius:6px;
   padding:9px 16px;font-weight:600;cursor:pointer;font-size:.85rem;transition:opacity .15s;}
 .addRow button:hover{opacity:.85;}
-.suggestWrap{position:relative;margin-top:10px;}
-.suggestBox{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);
-  background:var(--surface2);border:1px solid var(--line);border-radius:6px;
-  max-height:160px;overflow-y:auto;z-index:5;}
-.suggestRow{display:flex;align-items:center;justify-content:space-between;
-  padding:8px 10px;font-size:.85rem;cursor:pointer;}
-.suggestRow:hover{background:var(--surface);}
-.suggestRow span{flex:1;cursor:pointer;}
-.suggestRow button{background:none;border:0;color:var(--muted);cursor:pointer;
-  font-size:.85rem;padding:2px 6px;}
 .empty{color:var(--muted);font-size:.85rem;padding:8px 0;}
 
 #resetBanner{display:none;border-color:var(--l3);}
@@ -283,7 +273,7 @@ summary{font-weight:600;font-size:.95rem;cursor:pointer;}
   body>.topHeader,body>.plantWrap,body>.hero,body>.weekStrip,body>.bar,body>#resetBanner,body>.card,body>details.card{animation:riseIn .38s ease-out both;}
   body>.plantWrap{animation-delay:.05s;} body>.hero{animation-delay:.09s;} body>.weekStrip{animation-delay:.12s;} body>.bar{animation-delay:.15s;}
   body>#resetBanner,body>.card,body>details.card{animation-delay:.18s;}
-  .card,.pomoCard,.toggle,.taskRow,.addRow input,.suggestBox,#dayCard,#confirmCard{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease;}
+  .card,.pomoCard,.toggle,.taskRow,.addRow input,#dayCard,#confirmCard{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease;}
   .card:hover{border-color:color-mix(in srgb,var(--line) 65%,var(--muted));}
   button{transition:color .16s ease,background-color .16s ease,border-color .16s ease,opacity .16s ease,transform .16s ease;}
   button:active{transform:scale(.97);}
@@ -295,7 +285,7 @@ summary{font-weight:600;font-size:.95rem;cursor:pointer;}
   .cell{transition:transform .14s ease,background-color .28s ease,opacity .2s ease;}
   .weekStrip .cell{animation:revealIn .24s ease-out both;}
   .weekStrip .cell:nth-child(2){animation-delay:.02s}.weekStrip .cell:nth-child(3){animation-delay:.04s}.weekStrip .cell:nth-child(4){animation-delay:.06s}.weekStrip .cell:nth-child(5){animation-delay:.08s}.weekStrip .cell:nth-child(6){animation-delay:.1s}.weekStrip .cell:nth-child(7){animation-delay:.12s}
-  .suggestRow{animation:revealIn .16s ease-out both;}
+  
   details[open]>:not(summary){animation:revealIn .22s ease-out both;}
   .planTomorrow[open]>summary::before{transform:rotate(90deg);}
   .planTomorrow>summary{transition:color .16s ease,transform .16s ease;}
@@ -885,45 +875,7 @@ function renderDayChecklist(ds, listId, countId, doneId){
     el.appendChild(row);
   });
 
-  const unselected = tasks.filter(t=>!selIds.includes(t.id));
-  const addWrap = document.createElement('div');
-  addWrap.className = 'suggestWrap';
-  addWrap.innerHTML = `<div class="addRow"><input type="text" placeholder="Add a task for this day" maxlength="60" autocomplete="off"><button>Add</button></div>
-    <div class="suggestBox"></div>`;
-  const input = addWrap.querySelector('input');
-  const suggestBox = addWrap.querySelector('.suggestBox');
-  // Keep the input focused until a recommendation click has been handled.
-  suggestBox.addEventListener('mousedown',event=>event.preventDefault());
-  function addTaskToDay(id){
-    if(!selIds.includes(id)) setSelectedForDay(ds, selIds.concat([id]));
-    renderDayChecklist(ds, listId, countId, doneId);
-  }
-  function renderSuggestions(){
-    const q = input.value.trim().toLowerCase();
-    const matches = unselected.filter(t=>t.name.toLowerCase().includes(q));
-    suggestBox.innerHTML = '';
-    if(!matches.length){ suggestBox.style.display = 'none'; return; }
-    suggestBox.style.display = 'block';
-    matches.forEach(t=>{
-      const row = document.createElement('div');
-      row.className = 'suggestRow';
-      row.innerHTML = `<span>${escapeHtml(t.name)}</span><button aria-label="Remove suggestion">✕</button>`;
-      row.onclick = (event)=>{
-        if(!event.target.closest('button')) addTaskToDay(t.id);
-      };
-      row.querySelector('button').onclick = (e)=>{
-        e.stopPropagation();
-        tasks = tasks.filter(x=>x.id!==t.id);
-        save(LS_TASKS, tasks);
-        renderDayChecklist(ds, listId, countId, doneId);
-      };
-      suggestBox.appendChild(row);
-    });
-  }
-  input.addEventListener('input', renderSuggestions);
-  input.addEventListener('focus', renderSuggestions);
-  input.addEventListener('blur', ()=>{ setTimeout(()=>{ suggestBox.style.display='none'; }, 150); });
-  const commit = ()=>{
+  const addWrap=document.createElement('div');addWrap.className='addRow';addWrap.innerHTML='<input type="text" placeholder="Add a task for this day" maxlength="60" autocomplete="off"><button>Add</button>';const input=addWrap.querySelector('input');const commit=()=>{
     const name = input.value.trim();
     if(!name) return;
     const existing = tasks.find(t=>t.name.toLowerCase()===name.toLowerCase());
@@ -935,7 +887,7 @@ function renderDayChecklist(ds, listId, countId, doneId){
       tasks.push({id, name});
       save(LS_TASKS, tasks);
     }
-    addTaskToDay(id);
+    if(!selIds.includes(id))setSelectedForDay(ds,selIds.concat([id]));renderDayChecklist(ds,listId,countId,doneId);
   };
   addWrap.querySelector('button').onclick = commit;
   input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } });
@@ -951,7 +903,7 @@ function dayHit(ds){
 }
 function renderStreak(){
   let cur = 0;
-  let d = new Date();
+  let d = new Date();d.setHours(0,0,0,0);if(!dayHit(todayStr(d)))d.setDate(d.getDate()-1);
   while(dayHit(todayStr(d))){ cur++; d.setDate(d.getDate()-1); }
 
   let longest = 0, run = 0;
