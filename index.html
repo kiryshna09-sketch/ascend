@@ -1286,7 +1286,7 @@ function freshPomodoro(focusMinutes=DEFAULT_FOCUS_MINUTES,breakMinutes=DEFAULT_B
 const savedPomodoro=load(LS_POMODORO,null);
 // Move legacy timer defaults to 50/10, including saved or running sessions.
 const legacyTimerDefaults=!!savedPomodoro && (
-  (savedPomodoro.focusMinutes===25 && [1,5].includes(savedPomodoro.breakMinutes)) ||
+  (savedPomodoro.focusMinutes===25 && [1,5,10].includes(savedPomodoro.breakMinutes)) ||
   (savedPomodoro.focusMinutes===50 && savedPomodoro.breakMinutes===1)
 );
 const savedFocus=legacyTimerDefaults ? DEFAULT_FOCUS_MINUTES : clampMinutes(savedPomodoro?.focusMinutes,DEFAULT_FOCUS_MINUTES,180);
