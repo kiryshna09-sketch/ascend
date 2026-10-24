@@ -727,6 +727,13 @@ function selectedForDay(ds){
   if(selections[ds]) return selections[ds].filter(id=>tasks.some(t=>t.id===id));
   return tasks.map(t=>t.id);
 }
+function clearCompletionsAfter(dateStr){
+  let changed=false;
+  Object.keys(log).forEach(ds=>{
+    if(ds>dateStr){ delete log[ds]; changed=true; }
+  });
+  if(changed) save(LS_LOG,log);
+}
 function setSelectedForDay(ds, ids){
   selections[ds] = ids;
   save(LS_SELECT, selections);
@@ -828,8 +835,9 @@ function tomorrowStr(){
 // ---- Shared day checklist (today / tomorrow) ----
 function renderDayChecklist(ds, listId, countId, doneId){
   const el = document.getElementById(listId);
+  const isFuture = ds > todayStr();
   const selIds = selectedForDay(ds);
-  const done = new Set((log[ds]||[]).filter(id=>selIds.includes(id)));
+  const done = new Set((isFuture ? [] : (log[ds]||[])).filter(id=>selIds.includes(id)));
   const countEl = document.getElementById(countId);
   if(countEl) countEl.textContent = selIds.length ? `(${done.size}/${selIds.length})` : '';
   const doneEl = doneId ? document.getElementById(doneId) : null;
@@ -842,15 +850,15 @@ function renderDayChecklist(ds, listId, countId, doneId){
     const row = document.createElement('div');
     row.className = 'taskRow';
     const checked = done.has(id) ? 'checked' : '';
-    row.innerHTML = `<input type="checkbox" ${checked}><span title="Click to rename">${escapeHtml(t.name)}</span><button class="rmDay" aria-label="Not this day">✕</button>`;
-    row.querySelector('input').onchange = (e)=>{
-      let cur = new Set((log[ds]||[]).filter(x=>selIds.includes(x)));
-      if(e.target.checked) cur.add(id); else cur.delete(id);
-      log[ds] = Array.from(cur);
-      save(LS_LOG, log);
-      renderDayChecklist(ds, listId, countId, doneId);
-      renderGrids(); renderStreak(); renderYearStat(); renderHero(); renderWeekStrip();
-    };
+    row.innerHTML = `<input type="checkbox" ${checked} ${isFuture?'disabled':''}><span title="Click to rename">${escapeHtml(t.name)}</span><button class="rmDay" aria-label="Not this day">✕</button>`;
+    if(!isFuture) row.querySelector('input').onchange = (e)=>{
+        let cur = new Set((log[ds]||[]).filter(x=>selIds.includes(x)));
+        if(e.target.checked) cur.add(id); else cur.delete(id);
+        log[ds] = Array.from(cur);
+        save(LS_LOG, log);
+        renderDayChecklist(ds, listId, countId, doneId);
+        renderGrids(); renderStreak(); renderYearStat(); renderHero(); renderWeekStrip();
+      };
     row.querySelector('span').onclick = ()=>{
       const span = row.querySelector('span');
       const inp = document.createElement('input');
@@ -1135,9 +1143,10 @@ function renderMonthGrid(){
     const ds = todayStr(d);
     const cell = document.createElement('div');
     const future = d > now;
-    const cls = future ? '' : levelClass(pct(ds));
+    const dayProgress = future ? 0 : pct(ds);
+    const cls = levelClass(dayProgress);
     cell.className = 'cell month ' + cls + (ds===todayDs?' today':'');
-    attachCellTooltip(cell, d.toDateString(), pct(ds));
+    attachCellTooltip(cell, d.toDateString(), dayProgress);
     if(firstGridRender) cell.style.animation = `cellIn .3s ease ${Math.min((day-1)*8,350)}ms both`;
     if(!future) cell.onclick = ()=>openDay(ds);
     else cell.style.opacity = '0.35';
@@ -1434,6 +1443,10 @@ function renderAll(){
 }
 let renderedDate = todayStr();
 const savedActiveDate = localStorage.getItem(LS_ACTIVE_DATE);
+// Older versions allowed checking off tomorrow's tasks. Discard any completions
+// recorded after the last date this app considered today, then clear future entries.
+if(savedActiveDate && savedActiveDate < renderedDate) clearCompletionsAfter(savedActiveDate);
+clearCompletionsAfter(renderedDate);
 if(savedActiveDate && savedActiveDate !== renderedDate){
   setSelectedForDay(tomorrowStr(), []);
 }
@@ -1446,6 +1459,7 @@ function refreshForDateChange(){
   if(currentDate === renderedDate) return;
   const [year, month, day] = renderedDate.split('-').map(Number);
   const previousDate = new Date(year, month - 1, day);
+  clearCompletionsAfter(renderedDate);
   renderedDate = currentDate;
   localStorage.setItem(LS_ACTIVE_DATE, renderedDate);
   // The old tomorrow plan is now today's date-keyed selection; start the new tomorrow empty.
