@@ -1024,8 +1024,8 @@ function renderPlant(progressDays){
   plant.innerHTML = plantSVG(stage);
   plant.setAttribute('aria-label',stage<0?'No plant yet: day 0 of 30':stage===0?'Your seed is planted: day '+days+' of 30':stage===4?'Your plant is in full bloom':'Your plant is growing: day '+days+' of 30');
   document.getElementById('plantTitle').textContent = stage<0?'Ready to begin':stage===0?'Seed planted':titles[stage];
-  document.getElementById('plantCaption').textContent = stage<0?'Complete one focused day to plant the seed.':stage===0?remaining+' more '+(remaining===1?'day':'days')+' to full bloom.':remaining ? remaining+' consistent '+(remaining===1?'day':'days')+' to full bloom.' : 'Full bloom! Keep completing at least 80% of your tasks each day to maintain your streak and keep your flower blooming.';
-  document.getElementById('plantCaption').title = remaining ? remaining+' more consecutive successful days until full bloom.' : 'Complete at least 80% of your tasks each day to maintain your streak and keep your flower blooming.';
+  document.getElementById('plantCaption').textContent = stage<0?'Complete one focused day to plant the seed.':stage===0?remaining+' more '+(remaining===1?'day':'days')+' to full bloom.':remaining ? remaining+' consistent '+(remaining===1?'day':'days')+' to full bloom.' : 'To keep it blooming, continue completing at least 80% of that day’s selected tasks.';
+  document.getElementById('plantCaption').title = remaining ? remaining+' more consecutive successful days until full bloom.' : 'To keep it blooming, continue completing at least 80% of that day’s selected tasks.';
   document.getElementById('plantProgressLabel').textContent = 'Day '+days+' of 30';
   document.getElementById('plantProgressPercent').textContent = Math.round(days/30*100)+'%';
   document.getElementById('plantProgressFill').style.width = (days/30*100)+'%';
